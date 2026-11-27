@@ -75,10 +75,15 @@ function nepFetch(overschrijf = {}) {
   const fn = async (url, opties = {}) => {
     const u = String(url);
     verzoeken.push({ url: u, ...opties });
-    for (const [deel, antwoord] of Object.entries(overschrijf)) {
-      if (u.includes(deel)) return typeof antwoord === "function" ? antwoord(u, opties) : antwoord;
+    // Een test kan een bron vervangen: de sleutel is een hostnaam of een pad.
+    const doel = new URL(u);
+    for (const [sleutel, antwoord] of Object.entries(overschrijf)) {
+      const raak = sleutel.startsWith("/") ? doel.pathname === sleutel : doel.hostname === sleutel;
+      if (raak) return typeof antwoord === "function" ? antwoord(u, opties) : antwoord;
     }
-    if (u.endsWith("/v1/querybatch")) {
+    // De bron wordt herkend aan de precieze hostnaam, niet aan een stuk van het adres.
+    const { hostname: host, pathname: pad } = new URL(u);
+    if (host === "api.osv.dev" && pad === "/v1/querybatch") {
       const { queries } = JSON.parse(opties.body);
       return json({
         results: queries.map((q) =>
@@ -90,18 +95,24 @@ function nepFetch(overschrijf = {}) {
         ),
       });
     }
-    if (u.includes("/v1/vulns/GHSA-f82v")) return json(MELDING_NEXT);
-    if (u.includes("/v1/vulns/GHSA-aaaa")) return json(MELDING_XSS);
-    if (u.includes("services.nvd.nist.gov")) return json({ totalResults: 294, vulnerabilities: [] });
-    if (u.includes("cisa.gov")) {
+    if (host === "api.osv.dev" && pad === `/v1/vulns/${MELDING_NEXT.id}`) return json(MELDING_NEXT);
+    if (host === "api.osv.dev" && pad === `/v1/vulns/${MELDING_XSS.id}`) return json(MELDING_XSS);
+    if (host === "services.nvd.nist.gov") return json({ totalResults: 294, vulnerabilities: [] });
+    if (host === "www.cisa.gov") {
       return json({ vulnerabilities: [{ cveID: "CVE-2025-29927", dateAdded: "2026-11-26", knownRansomwareCampaignUse: "Unknown" }] });
     }
-    if (u.includes("api.first.org")) return json({ data: [{ cve: "CVE-2025-29927", epss: "0.752660000" }] });
-    if (u.includes("euvdservices")) return json({ items: [{ id: "EUVD-2025-7243", aliases: "GHSA-f82v-jwr5-mffw\nCVE-2025-29927\n" }] });
-    if (u.includes("advisories.ncsc.nl/rss")) return new Response(NCSC_FEED);
-    if (u.includes("ncsc-2026-0500.json")) return json({ vulnerabilities: [{ cve: "CVE-2025-29927" }], product_tree: { branches: [{ category: "vendor", name: "Vercel", branches: [{ category: "product_name", name: "Next.js" }] }] } });
-    if (u.includes("advisories.ncsc.nl/csaf")) return json({ vulnerabilities: [], product_tree: { branches: [{ category: "product_name", name: "React" }] } });
-    if (u.includes("nodejs.org/dist/index.json")) {
+    if (host === "api.first.org") return json({ data: [{ cve: "CVE-2025-29927", epss: "0.752660000" }] });
+    if (host === "euvdservices.enisa.europa.eu") {
+      return json({ items: [{ id: "EUVD-2025-7243", aliases: "GHSA-f82v-jwr5-mffw\nCVE-2025-29927\n" }] });
+    }
+    if (host === "advisories.ncsc.nl" && pad === "/rss/advisories") return new Response(NCSC_FEED);
+    if (host === "advisories.ncsc.nl" && pad.endsWith("/ncsc-2026-0500.json")) {
+      return json({ vulnerabilities: [{ cve: "CVE-2025-29927" }], product_tree: { branches: [{ category: "vendor", name: "Vercel", branches: [{ category: "product_name", name: "Next.js" }] }] } });
+    }
+    if (host === "advisories.ncsc.nl" && pad.startsWith("/csaf/")) {
+      return json({ vulnerabilities: [], product_tree: { branches: [{ category: "product_name", name: "React" }] } });
+    }
+    if (host === "nodejs.org" && pad === "/dist/index.json") {
       return json([
         { version: "v24.22.3", date: "2026-11-10", security: true },
         { version: "v22.23.5", date: "2026-11-11", security: true },
@@ -320,7 +331,7 @@ test("alles rustig", async () => {
 });
 
 test("een bron die uitvalt staat in de mail, de rest gaat door", async () => {
-  const fetchFn = nepFetch({ "cisa.gov": new Response("", { status: 404 }) });
+  const fetchFn = nepFetch({ "www.cisa.gov": new Response("", { status: 404 }) });
   const r = await ochtendcheck(controleerKaart(KAART), legeStaat(), { fetchFn, nu: NU, omgeving: {} });
   assert.equal(r.mislukt, false);
   assert.equal(r.bevindingen[0].misbruikt, false);
@@ -477,7 +488,7 @@ test("een platformonderdeel dat niet te controleren is, telt als onvolledig", as
       { naam: "Urenapp", platform: [{ naam: "nodejs", versie: "22.23.5" }] },
     ],
   });
-  const fetchFn = nepFetch({ virtualMatchString: new Response("", { status: 400 }) });
+  const fetchFn = nepFetch({ "services.nvd.nist.gov": (u) => (u.includes("virtualMatchString") ? new Response("", { status: 400 }) : json({ totalResults: 294, vulnerabilities: [] })) });
   const r = await ochtendcheck(kaart, legeStaat(), { fetchFn, nu: NU, omgeving: {}, nvdPauze: 1 });
   assert.deepEqual(r.onvolledig, ["Portaal", "Site"]);
   assert.deepEqual(r.rustig, ["Urenapp"]);

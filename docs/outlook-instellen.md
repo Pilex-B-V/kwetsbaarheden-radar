@@ -10,9 +10,9 @@ bij [De mail op een andere manier versturen](#de-mail-op-een-andere-manier-verst
 
 ## Wat je straks hebt
 
-Vijf waarden. Die zet je als secret in je repository (stap 5).
+Vijf waarden. Die zet je in het bestand `.env` in de map van de radar (stap 4).
 
-| Secret | Wat het is |
+| Naam | Wat het is |
 | --- | --- |
 | `RADAR_TENANT_ID` | Het nummer van je Microsoft 365-omgeving |
 | `RADAR_CLIENT_ID` | Het nummer van de app-registratie |
@@ -86,42 +86,42 @@ Twee dingen om te weten:
 - Een wijziging in deze rechten werkt volgens Microsoft na 30 minuten tot 2 uur.
   Krijg je direct na het instellen een foutmelding over toegang, wacht dan even.
 
-## Stap 4: test het
+## Stap 4: vul de waarden in en verstuur een proefmail
 
-Zet de vijf waarden lokaal in je terminal en draai de radar één keer. Op een
-Mac of in Linux:
+Maak in de map van de radar het bestand `.env` aan, als het er nog niet is:
 
 ```bash
-export RADAR_TENANT_ID="..."
-export RADAR_CLIENT_ID="..."
-export RADAR_CLIENT_SECRET="..."
-export RADAR_MAIL_VAN="radar@jouwbedrijf.nl"
-export RADAR_MAIL_AAN="jij@jouwbedrijf.nl"
-node src/radar.mjs
+cp .env.voorbeeld .env
 ```
 
-In PowerShell op Windows:
+Open `.env` in een editor en vul de vijf waarden in, elk achter het
+is-gelijkteken. Het bestand blijft op je computer: het gaat nooit mee naar
+GitHub.
 
-```powershell
-$env:RADAR_TENANT_ID = "..."
-$env:RADAR_CLIENT_ID = "..."
-$env:RADAR_CLIENT_SECRET = "..."
-$env:RADAR_MAIL_VAN = "radar@jouwbedrijf.nl"
-$env:RADAR_MAIL_AAN = "jij@jouwbedrijf.nl"
-node src/radar.mjs
+Verstuur daarna één proefmail:
+
+```bash
+npm run proefmail
 ```
 
-Onderaan staat `Mail verstuurd naar 1 adres via Outlook.` en de mail staat in je
-postvak. Liever niet lokaal testen? Sla deze stap over en gebruik **Run
-workflow** in stap 5.
+De eerste regel noemt welke instellingen zijn gelezen. Onderaan staat
+`Proefmail verstuurd naar 1 adres via Outlook.` en de mail staat in je postvak,
+met een onderwerp dat begint met Proef. Een proefmail onthoudt niets, zodat je
+eerste echte run de nulmeting blijft.
 
-## Stap 5: zet de waarden in GitHub
+## Stap 5: neem de waarden mee bij het uitrollen
 
-In je eigen, afgeschermde repository: **Settings**, **Secrets and variables**,
-**Actions**, **New repository secret**. Maak de vijf secrets uit de tabel
-bovenaan. Ga daarna naar **Actions**, kies **Ochtendcheck** en klik op **Run
-workflow**. Na een paar minuten hoort de mail er te zijn. Krijg je een status
-403, dan zijn de rechten uit stap 3 nog niet doorgekomen: wacht tot twee uur.
+Rol je de radar uit in GitHub Actions, dan zet je alles wat in `.env` staat in
+één keer als secret in je eigen, afgeschermde repository:
+
+```bash
+gh secret set -f .env
+```
+
+De hele uitrol staat in [altijd-laten-draaien.md](altijd-laten-draaien.md).
+Liever in de browser? Ga in je repository naar **Settings**, **Secrets and
+variables**, **Actions** en maak met **New repository secret** de vijf secrets
+uit de tabel bovenaan.
 
 ## Als het niet werkt
 
@@ -130,7 +130,7 @@ workflow**. Na een paar minuten hoort de mail er te zijn. Krijg je een status
 | `login.microsoftonline.com: status 400` of `401` | Het tenant-ID, het client-ID of het secret klopt niet, of het secret is verlopen. Maak een nieuw secret. |
 | `graph.microsoft.com: status 403` | De app mag niet versturen vanuit dit postvak. Loop stap 3 na en wacht tot twee uur. |
 | `graph.microsoft.com: status 404` | Het adres in `RADAR_MAIL_VAN` bestaat niet of is geen postvak. |
-| `Outlook is half ingesteld` | Een van de vijf secrets ontbreekt. De melding noemt welke. |
+| `Outlook is half ingesteld` | Een van de vijf waarden ontbreekt. De melding noemt welke. |
 | De mail komt in de map Ongewenst | Markeer hem één keer als veilig en zet de afzender in je lijst met veilige afzenders. |
 
 ## De mail op een andere manier versturen
