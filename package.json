@@ -9,8 +9,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "radar": "node src/radar.mjs",
     "voorbeeld": "node src/radar.mjs --kaart voorbeeld/techniekkaart.json --droog",
+    "droog": "node src/radar.mjs --droog",
+    "proefmail": "node src/radar.mjs --proefmail",
+    "radar": "node src/radar.mjs",
     "kaart": "node src/kaart.mjs",
     "test": "node --test"
   }

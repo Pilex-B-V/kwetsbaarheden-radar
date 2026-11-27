@@ -4,6 +4,7 @@
 //
 //   node src/radar.mjs                  de check draaien en de mail versturen
 //   node src/radar.mjs --droog          alles doen, maar niets versturen of onthouden
+//   node src/radar.mjs --proefmail      één proefmail versturen, zonder iets te onthouden
 //   node src/radar.mjs --kaart pad.json een andere techniekkaart gebruiken
 
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
@@ -12,6 +13,7 @@ import { parseArgs } from "node:util";
 import { laadKaart } from "./lib/kaart.mjs";
 import { maakHtml, maakRapport, maakTekst, status } from "./lib/mail.mjs";
 import { ochtendcheck } from "./lib/ochtendcheck.mjs";
+import { laadEnv } from "./lib/omgeving.mjs";
 import { bewaarStaat, laadStaat } from "./lib/staat.mjs";
 import { verstuur, verzendwijze } from "./lib/verstuur.mjs";
 
@@ -24,9 +26,11 @@ Opties:
   --kaart <pad>   De techniekkaart (standaard techniekkaart.json, of RADAR_KAART)
   --uit <map>     Waar de mail en het rapport komen te staan (standaard uit)
   --droog         Niets versturen en niets onthouden; handig om te testen
+  --proefmail     Eén proefmail versturen om de koppeling te testen; onthoudt niets
   --help          Deze uitleg
 
-Versturen stel je in met omgevingsvariabelen, zie de README.`;
+Instellingen komen uit omgevingsvariabelen of uit een bestand .env in deze map.
+Zie .env.voorbeeld en de README.`;
 
 const slug = (naam) =>
   naam
@@ -41,6 +45,7 @@ async function hoofd() {
       kaart: { type: "string" },
       uit: { type: "string", default: "uit" },
       droog: { type: "boolean", default: false },
+      proefmail: { type: "boolean", default: false },
       help: { type: "boolean", default: false },
     },
   });
@@ -48,15 +53,25 @@ async function hoofd() {
     console.log(HULP);
     return 0;
   }
+  const uitEnv = laadEnv();
+  if (uitEnv.length) console.log(`Instellingen gelezen uit .env: ${uitEnv.join(", ")}.`);
   const omgeving = process.env;
   const kaartPad = optie.kaart || omgeving.RADAR_KAART || "techniekkaart.json";
   const staatMap = omgeving.RADAR_STAAT_MAP || ".radar";
 
   // Een halve instelling is een fout: liever nu stoppen dan stil niets sturen.
   const wijze = optie.droog ? null : verzendwijze(omgeving);
+  if (optie.proefmail && !wijze) {
+    throw new Error(
+      "Voor een proefmail moet de mail zijn ingesteld. Vul de waarden in .env in (zie .env.voorbeeld en docs/outlook-instellen.md).",
+    );
+  }
 
   const kaart = await laadKaart(kaartPad, { omgeving });
-  const staat = optie.droog
+  // Een droge run en een proefmail laten geen sporen na: de eerste echte run
+  // blijft de nulmeting.
+  const zonderGeheugen = optie.droog || optie.proefmail;
+  const staat = zonderGeheugen
     ? { eersteRun: true, laatsteRun: null, gezien: {}, cache: { osv: {}, ncsc: {} } }
     : await laadStaat(staatMap);
 
@@ -109,17 +124,33 @@ async function hoofd() {
     console.log("Droge run: er is niets verstuurd en niets onthouden.");
     return rapport.mislukt ? 1 : 0;
   }
-  if (!rapport.mislukt) {
-    await bewaarStaat(staatMap, { nu: rapport.nu, gezien: staat.gezien, cache: staat.cache });
+  // Lukt het versturen niet, dan onthoudt de radar ook niets: wat vandaag
+  // nieuw was, staat morgen nog als nieuw in de mail.
+  const zend = async (bericht) => {
+    try {
+      return await verstuur(bericht, { omgeving });
+    } catch (fout) {
+      throw new Error(
+        `De mail is niet verstuurd (${fout.message}). Het rapport staat wel in de map ${optie.uit}. Zie docs/outlook-instellen.md, onder Als het niet werkt.`,
+      );
+    }
+  };
+  if (optie.proefmail) {
+    const proef = { ...mail, onderwerp: `Proef · ${mail.onderwerp}` };
+    console.log(`Proefmail ${await zend(proef)}. Er is niets onthouden.`);
+    return rapport.mislukt ? 1 : 0;
   }
   const alleenBijNieuws = /^(1|true|ja)$/i.test(omgeving.RADAR_ALLEEN_BIJ_NIEUWS ?? "");
   const nieuws = rapport.mislukt || rapport.cijfers.nieuwUitgelicht + rapport.cijfers.nieuwOverig > 0;
   if (!wijze) {
-    console.log("Er is geen verzendwijze ingesteld, dus er is niets verstuurd. Zie de README, stap 4.");
+    console.log("De mail is nog niet ingesteld, dus er is niets verstuurd. Zie docs/outlook-instellen.md.");
   } else if (alleenBijNieuws && !nieuws) {
     console.log("Niets nieuws en RADAR_ALLEEN_BIJ_NIEUWS staat aan: geen mail verstuurd.");
   } else {
-    console.log(`Mail ${await verstuur(mail, { omgeving })}.`);
+    console.log(`Mail ${await zend(mail)}.`);
+  }
+  if (!rapport.mislukt) {
+    await bewaarStaat(staatMap, { nu: rapport.nu, gezien: staat.gezien, cache: staat.cache });
   }
   return rapport.mislukt ? 1 : 0;
 }

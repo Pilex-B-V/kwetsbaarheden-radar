@@ -38,8 +38,7 @@ gratis gids van Pilex:
 ## Inhoud
 
 - [Zo werkt het](#zo-werkt-het)
-- [In vijf stappen aan de praat](#in-vijf-stappen-aan-de-praat)
-- [Op je eigen computer](#op-je-eigen-computer)
+- [Aan de slag](#aan-de-slag)
 - [De techniekkaart](#de-techniekkaart)
 - [Wat er in de mail staat](#wat-er-in-de-mail-staat)
 - [Instellingen](#instellingen)
@@ -67,45 +66,71 @@ techniekkaart.json          openbare bronnen               je postvak
    kwetsbaarheden er zijn voor precies jouw versies.
 3. Hij maakt er **één mail** van en verstuurt die vanuit een postvak in Outlook.
 
-De radar draait als dagelijkse taak in GitHub Actions, in je eigen, afgeschermde
-kopie van deze repository. Er zit geen taalmodel in: vergelijken is rekenwerk en
-hoort elke dag dezelfde uitkomst te geven.
+Je test de radar eerst op je eigen computer. Daarna draait hij als dagelijkse
+taak in GitHub Actions, in je eigen, afgeschermde repository, of op een eigen
+server. Er zit geen taalmodel in: vergelijken is rekenwerk en hoort elke dag
+dezelfde uitkomst te geven.
 
-## In vijf stappen aan de praat
+## Aan de slag
 
-Alles hieronder doe je in de browser. Je hoeft niets te installeren. Je hebt een
-GitHub-account nodig, en voor de mail in Outlook een beheerder van Microsoft
-365. Reken op een uur voor de eerste app.
+Je haalt de radar binnen, test hem op je eigen computer en rolt hem daarna uit,
+zodat hij elke ochtend vanzelf draait. Reken op een uur voor de eerste app.
 
-Liever met hulp? De prompt in
-[prompts/03-radar-installeren.md](prompts/03-radar-installeren.md) laat Claude
-Code de stappen met je doorlopen.
+### De snelste route: laat Claude Code het doen
 
-### 1. Maak je eigen, afgeschermde kopie
+In deze repository staat een handleiding die [Claude Code](https://claude.com/claude-code)
+zelf leest. Haal de radar binnen en start Claude in de map:
 
-Klik bovenaan deze pagina op **Use this template** en dan op **Create a new
-repository**. Kies een naam, zet de zichtbaarheid op **Private** en maak de repository aan
-met de groene knop onderaan.
+```bash
+git clone https://github.com/Pilex-B-V/kwetsbaarheden-radar.git
+cd kwetsbaarheden-radar
+claude
+```
 
-> [!IMPORTANT]
-> Je techniekkaart en je rapporten laten zien waar je apps kwetsbaar zijn. Die
-> horen niet in een openbare repository. De taak weigert te draaien als er een
-> techniekkaart in een openbare repository staat.
+Zeg daarna:
 
-### 2. Bekijk het voorbeeld
+```text
+Zet de radar voor me op.
+```
 
-Ga in je kopie naar **Actions**, klik links op **Ochtendcheck** en dan rechts op
-**Run workflow**. Zolang er geen techniekkaart in je kopie staat, controleert de
-radar drie verzonnen apps met bewust oude onderdelen. Er wordt niets verstuurd.
+Claude loopt drie fasen met je door en vraagt je akkoord voordat het iets
+aanmaakt of verstuurt:
 
-Klik na een halve minuut op de run die verschijnt. Onder **Summary** staat het
-rapport, en onder **Artifacts** de mail zoals hij verstuurd zou worden. Hoe dat
-eruitziet, staat ook in [voorbeeld/uitvoer](voorbeeld/uitvoer).
+1. **Lokaal testen.** Het voorbeeld, daarna je eigen apps. Er wordt niets
+   verstuurd.
+2. **De mail koppelen.** Je vult de instellingen in en verstuurt één proefmail.
+3. **Uitrollen.** De radar komt in je eigen, afgeschermde repository en draait
+   daar elke ochtend.
 
-### 3. Maak je techniekkaart
+Dit heeft Claude van je nodig:
 
-Klik in je kopie op **Add file** en dan op **Create new file**. Noem het bestand
-`techniekkaart.json` en plak dit erin, met je eigen gegevens:
+| Voor | Wat | Van wie |
+| --- | --- | --- |
+| De techniekkaart | Welke apps je hebt en waar de code staat: een map op je computer of een repository op GitHub | Jij, of de bouwer van de app |
+| De techniekkaart | Per app wie erover gaat, wie updates uitvoert, of er gevoelige gegevens in staan en of de app aan het internet hangt | Jij |
+| Afgeschermde repositories | Een token dat alleen mag lezen | Jij maakt het aan in GitHub |
+| De mail in Outlook | Vijf waarden uit Microsoft 365 | Een beheerder van Microsoft 365 |
+| Uitrollen | Een GitHub-account | Jij |
+
+Wachtwoorden en tokens typ je zelf in het bestand `.env`. Claude vraagt er niet
+om en leest dat bestand niet.
+
+Geen Claude Code? Hieronder staan dezelfde drie fasen om zelf te doen.
+
+### 1. Lokaal testen
+
+Je hebt Git en Node.js 20 of hoger nodig. Pakketten installeren hoeft niet.
+
+```bash
+git clone https://github.com/Pilex-B-V/kwetsbaarheden-radar.git
+cd kwetsbaarheden-radar
+npm run voorbeeld
+```
+
+De radar controleert drie verzonnen apps met bewust oude onderdelen. Open
+daarna `uit/ochtendmail.html` in je browser: zo ziet de mail eruit.
+
+Maak nu in dezelfde map het bestand `techniekkaart.json`, met je eigen apps:
 
 ```json
 {
@@ -126,19 +151,37 @@ Klik in je kopie op **Add file** en dan op **Create new file**. Noem het bestand
 }
 ```
 
-Klik op **Commit changes...** en bevestig. Een tweede app zet je als volgend blok
-in de lijst `apps`, met een komma ertussen. Wat elk veld betekent, staat bij
-[De techniekkaart](#de-techniekkaart).
+Bij `bronnen` staat waar het lockfile van de app staat. De radar haalt het bij
+elke run op, dus de kaart klopt ook nadat de app is bijgewerkt. Een tweede app
+zet je als volgend blok in de lijst, met een komma ertussen. Wat elk veld
+betekent, staat bij [De techniekkaart](#de-techniekkaart).
 
-Bij `bronnen` staat waar het lockfile van de app staat. De radar haalt het elke
-ochtend op, dus de kaart klopt ook nadat de app is bijgewerkt. Staat de code van
-je app in een openbare repository, dan ben je klaar met deze stap. Is de
-repository afgeschermd, en dat is bij bedrijfssoftware meestal zo, dan heeft de
-radar een token nodig dat alleen mag lezen:
+Staat de code van een app niet in GitHub maar op je computer, laat de radar het
+lockfile dan inlezen. Hij zet de app met alle onderdelen in de kaart:
 
-1. Klik rechtsboven op je profielfoto en ga naar **Settings**, **Developer
-   settings**, **Personal access tokens**, **Fine-grained tokens**. Klik op
-   **Generate new token**.
+```bash
+node src/kaart.mjs ../klantportaal/package-lock.json --naam "Klantportaal" --schrijf
+```
+
+Doe dat opnieuw na elke update van de app, anders loopt de kaart achter.
+
+Test daarna je kaart. Een droge run doet alles, maar verstuurt en onthoudt
+niets:
+
+```bash
+npm run droog
+```
+
+#### Het leestoken voor GitHub
+
+Een lockfile uit een openbare repository leest de radar zonder meer. Is de
+repository afgeschermd, en dat is bij bedrijfssoftware meestal zo, dan heeft hij
+een token nodig dat alleen mag lezen. Zonder token staat de app in de uitkomst
+onder Niet volledig gecontroleerd.
+
+1. Klik in GitHub rechtsboven op je profielfoto en ga naar **Settings**,
+   **Developer settings**, **Personal access tokens**, **Fine-grained tokens**.
+   Klik op **Generate new token**.
 2. Kies bij **Expiration** een einddatum en zet die in je agenda. Daarna leest
    de radar je lockfiles niet meer; de mail zegt het als dat gebeurt.
 3. Kies bij **Resource owner** de eigenaar van de repositories van je apps:
@@ -147,71 +190,88 @@ radar een token nodig dat alleen mag lezen:
    alleen de repositories van je apps.
 5. Zet bij **Permissions** alleen **Contents** op **Read-only**. Klik op
    **Generate token** en kopieer het token.
-6. Ga in je kopie van de radar naar **Settings**, **Secrets and variables**,
-   **Actions**. Klik op **New repository secret**, vul bij **Name**
-   `RADAR_GITHUB_TOKEN` in, plak het token bij **Secret** en klik op **Add
-   secret**.
+6. Zet het in `.env`, achter `RADAR_GITHUB_TOKEN=` (zie de volgende fase voor
+   dat bestand).
 
 Hoort de repository bij een organisatie, dan kan de eigenaar daarvan goedkeuring
 eisen. Het token werkt dan pas nadat het is goedgekeurd.
 
-Staat de code van je app niet in GitHub, of weet je niet waar hij van gemaakt
-is? Zie [Op je eigen computer](#op-je-eigen-computer) en de prompts in
-[prompts/](prompts/).
+### 2. De mail koppelen
 
-### 4. Koppel je mail
+De instellingen staan in het bestand `.env`. Dat bestand blijft op je computer:
+het gaat nooit mee naar GitHub.
 
-Volg [docs/outlook-instellen.md](docs/outlook-instellen.md). Een beheerder van
-Microsoft 365 maakt één keer een koppeling die alleen vanuit één postvak mag
-versturen. Dat levert vijf waarden op, die je als secret in je kopie zet.
+```bash
+cp .env.voorbeeld .env
+```
 
-Geen beheerder bij de hand? Sla deze stap dan voorlopig over. De radar draait
-ook zonder mail: het rapport staat dan elke ochtend bij de run in GitHub.
+Open `.env` en vul in wat je gebruikt:
 
-### 5. Start de ochtendcheck
+- **Outlook.** Volg [docs/outlook-instellen.md](docs/outlook-instellen.md). Een
+  beheerder van Microsoft 365 maakt één keer een koppeling die alleen vanuit één
+  postvak mag versturen. Dat levert vijf waarden op.
+- **Een webhook.** Vul alleen `RADAR_WEBHOOK_URL` in. De radar stuurt de mail
+  dan als bericht naar Power Automate, n8n, Make of Teams.
 
-Ga naar **Actions**, klik links op **Ochtendcheck** en dan op **Run workflow**.
-Na een paar minuten staat de eerste mail in je postvak. Daarna start de taak
-elke ochtend om 07:40 Nederlandse tijd, zodat de mail er meestal voor 08:00 is.
-Bij drukte kan GitHub een taak later starten.
+Verstuur één proefmail. Die onthoudt niets, zodat je eerste echte run de
+nulmeting blijft:
+
+```bash
+npm run proefmail
+```
+
+Nog geen beheerder bij de hand? Sla deze fase over. De radar draait ook zonder
+mail; het rapport staat dan bij elke run.
+
+### 3. Uitrollen
+
+Nu zet je de radar zo neer dat hij elke ochtend vanzelf draait. De volledige
+uitleg, ook voor een eigen server, staat in
+[docs/altijd-laten-draaien.md](docs/altijd-laten-draaien.md). In het kort, met
+GitHub Actions:
+
+```bash
+git remote rename origin radar
+git add techniekkaart.json
+git commit -m "Techniekkaart"
+gh repo create jouw-bedrijf/kwetsbaarheden-radar --private --source=. --remote=origin --push
+gh secret set -f .env
+gh workflow run ochtendcheck.yml
+```
+
+Daarmee staat de radar in je eigen, afgeschermde repository, staan je
+instellingen daar als secret en is de eerste run gestart. Vanaf dat moment
+draait hij elke ochtend om 07:40 Nederlandse tijd, zodat de mail er meestal voor
+08:00 is.
+
+> [!IMPORTANT]
+> Je techniekkaart en je rapporten laten zien waar je apps kwetsbaar zijn. Zet
+> ze alleen in een repository die op privé staat. De taak weigert te draaien als
+> er een techniekkaart in een openbare repository staat.
 
 De eerste mail is je nulmeting: alles wat nu open staat. Bij een app die een
 tijd niet is bijgewerkt, is dat een lange lijst. Vanaf de tweede mail staat bij
 elk lek of het nieuw is, of sinds wanneer het open staat.
 
-## Op je eigen computer
+<details>
+<summary><b>Alles in de browser, zonder iets te installeren</b></summary>
 
-Dit hoeft niet, maar het is handig als je de kaart wilt testen voordat je iets
-verstuurt, of als de code van een app niet in GitHub staat. Je hebt Git en
-Node.js 20 of hoger nodig. Pakketten installeren hoeft niet.
+Je slaat het lokale testen dan over en test in GitHub zelf.
 
-```bash
-git clone https://github.com/<jouw-account>/<jouw-kopie>.git
-cd <jouw-kopie>
-npm run voorbeeld
-```
+1. Klik bovenaan deze pagina op **Use this template** en dan op **Create a new
+   repository**. Zet de zichtbaarheid op **Private**.
+2. Ga in je kopie naar **Actions**, klik links op **Ochtendcheck** en dan op
+   **Run workflow**. Zolang er geen techniekkaart staat, draait de radar op het
+   voorbeeld en verstuurt hij niets. Het rapport staat bij de run onder
+   **Summary**.
+3. Klik op **Add file**, **Create new file**, noem het bestand
+   `techniekkaart.json`, plak je kaart erin en klik op **Commit changes...**.
+4. Zet je instellingen onder **Settings**, **Secrets and variables**,
+   **Actions**, met **New repository secret**. De namen staan bij
+   [Instellingen](#instellingen).
+5. Start de taak opnieuw met **Run workflow**.
 
-De mail van het voorbeeld staat daarna in `uit/ochtendmail.html`.
-
-**Een app op de kaart zetten vanuit een lockfile op je computer.** De radar leest
-het lockfile één keer in en zet alle onderdelen in de kaart:
-
-```bash
-node src/kaart.mjs ../klantportaal/package-lock.json --naam "Klantportaal" --schrijf
-```
-
-Doe dit opnieuw na elke update van de app, anders loopt de kaart achter. Haalt
-de radar het lockfile zelf op uit GitHub (stap 3), dan hoeft dit niet.
-
-**De kaart testen zonder iets te versturen.**
-
-```bash
-node src/radar.mjs --droog
-```
-
-Een droge run doet alles, maar verstuurt en onthoudt niets. Haalt de radar je
-lockfiles uit GitHub, dan heeft hij ook lokaal het token nodig, als
-omgevingsvariabele `RADAR_GITHUB_TOKEN`.
+</details>
 
 ## De techniekkaart
 
@@ -302,23 +362,31 @@ rapport en de instructie staan in [voorbeeld/uitvoer](voorbeeld/uitvoer).
 
 ## Instellingen
 
-Alles stel je in met secrets en variabelen in je kopie: **Settings**, **Secrets
-and variables**, **Actions**.
+Op je computer staan de instellingen in `.env` (zie `.env.voorbeeld`). In
+GitHub staan ze als secret in je repository: **Settings**, **Secrets and
+variables**, **Actions**. Met `gh secret set -f .env` zet je ze in één keer over.
 
-| Naam | Soort | Waarvoor |
-| --- | --- | --- |
-| `RADAR_GITHUB_TOKEN` | Secret | Leestoegang tot de afgeschermde repositories van je apps |
-| `RADAR_TENANT_ID` | Secret | Outlook: het nummer van je Microsoft 365-omgeving |
-| `RADAR_CLIENT_ID` | Secret | Outlook: het nummer van de app-registratie |
-| `RADAR_CLIENT_SECRET` | Secret | Outlook: het wachtwoord van de app-registratie |
-| `RADAR_MAIL_VAN` | Secret | Outlook: het postvak waaruit de mail vertrekt |
-| `RADAR_MAIL_AAN` | Secret | Outlook: wie de mail krijgt, gescheiden door komma's |
-| `RADAR_WEBHOOK_URL` | Secret | In plaats van Outlook: het adres waar de mail als JSON heen gaat |
-| `NVD_API_KEY` | Secret | Optioneel. Met een gratis sleutel van NVD gaat het nalopen van platformonderdelen sneller |
-| `RADAR_ALLEEN_BIJ_NIEUWS` | Variabele | Optioneel. Zet op `ja` om alleen een mail te krijgen als er iets nieuws is |
-| `RADAR_TIJDZONE` | Variabele | Optioneel. De tijdzone voor de datum in de mail, standaard `Europe/Amsterdam` |
+| Naam | Waarvoor |
+| --- | --- |
+| `RADAR_GITHUB_TOKEN` | Leestoegang tot de afgeschermde repositories van je apps |
+| `RADAR_TENANT_ID` | Outlook: het nummer van je Microsoft 365-omgeving |
+| `RADAR_CLIENT_ID` | Outlook: het nummer van de app-registratie |
+| `RADAR_CLIENT_SECRET` | Outlook: het wachtwoord van de app-registratie |
+| `RADAR_MAIL_VAN` | Outlook: het postvak waaruit de mail vertrekt |
+| `RADAR_MAIL_AAN` | Outlook: wie de mail krijgt, gescheiden door komma's |
+| `RADAR_WEBHOOK_URL` | In plaats van Outlook: het adres waar de mail als JSON heen gaat |
+| `NVD_API_KEY` | Optioneel. Met een gratis sleutel van NVD gaat het nalopen van platformonderdelen sneller |
+| `RADAR_ALLEEN_BIJ_NIEUWS` | Optioneel. Zet op `ja` om alleen een mail te krijgen als er iets nieuws is |
+| `RADAR_TIJDZONE` | Optioneel. De tijdzone voor de datum in de mail, standaard `Europe/Amsterdam` |
 
-Een variabele maak je op hetzelfde scherm, op het tabblad **Variables**.
+De opdrachten:
+
+| Opdracht | Wat het doet |
+| --- | --- |
+| `npm run voorbeeld` | De radar op drie verzonnen apps. Verstuurt en onthoudt niets |
+| `npm run droog` | De radar op je eigen kaart. Verstuurt en onthoudt niets |
+| `npm run proefmail` | Verstuurt één proefmail. Onthoudt niets |
+| `npm run radar` | De echte run: verstuurt de mail en onthoudt wat hij zag |
 
 Ons advies: laat de mail elke dag komen, ook als er niets is. Een mail die
 wegblijft, valt dan op.
@@ -326,11 +394,6 @@ wegblijft, valt dan op.
 Het tijdstip staat in
 [.github/workflows/ochtendcheck.yml](.github/workflows/ochtendcheck.yml). Wil je
 alleen werkdagen, verander dan `40 7 * * *` in `40 7 * * 1-5`.
-
-**Zonder GitHub draaien.** De radar is één programma. Je kunt hem ook op een
-eigen server laten draaien, met cron of de Taakplanner van Windows:
-`node src/radar.mjs --kaart /pad/naar/techniekkaart.json`. De instellingen zet
-je dan als omgevingsvariabelen bij die taak.
 
 ## Wat de radar niet ziet
 
@@ -401,9 +464,9 @@ afgeschermde repository valt ruim binnen wat een gratis GitHub-account elke
 maand aan rekentijd krijgt.
 
 **Hoe neem ik verbeteringen van de radar over?**
-Je kopie staat los van deze repository. Kopieer de nieuwe versie van de map
-`src` en van `.github/workflows` naar je kopie. Wat er is veranderd, staat bij
-[Releases](https://github.com/Pilex-B-V/kwetsbaarheden-radar/releases).
+Heb je de radar binnengehaald met `git clone` en uitgerold zoals hierboven, dan
+is het `git pull radar main` en daarna `git push`. Wat er is veranderd, staat
+bij [Releases](https://github.com/Pilex-B-V/kwetsbaarheden-radar/releases).
 
 ## Ontwikkelen
 

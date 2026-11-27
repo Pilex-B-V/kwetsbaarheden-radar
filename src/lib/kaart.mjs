@@ -83,7 +83,7 @@ async function leesBron(bron, basis, omgeving, fetchFn) {
       throw new Error(
         omgeving.RADAR_GITHUB_TOKEN
           ? "geen toegang. Controleer de naam van de repository en het pad, en of het token bij deze repository mag en niet is verlopen."
-          : "niet gevonden. Klopt de naam en het pad? Is de repository afgeschermd, zet dan een leestoken in RADAR_GITHUB_TOKEN (README, stap 3).",
+          : "niet gevonden. Klopt de naam en het pad? Is de repository afgeschermd, zet dan een leestoken in RADAR_GITHUB_TOKEN (zie de README).",
       );
     }
     throw fout;
@@ -101,7 +101,7 @@ export async function laadKaart(pad, { omgeving = process.env, fetchFn } = {}) {
   } catch (fout) {
     if (fout.code === "ENOENT") {
       throw new Error(
-        `Er is nog geen ${pad}. Maak hem aan (README, stap 3) of probeer eerst het voorbeeld: npm run voorbeeld`,
+        `Er is nog geen ${pad}. Maak hem aan (zie de README) of probeer eerst het voorbeeld: npm run voorbeeld`,
       );
     }
     throw new Error(`${pad} is geen geldige JSON: ${fout.message}`);

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm run voorbeeld)",
+      "Bash(npm run droog)",
+      "Bash(node --version)",
+      "Bash(node src/radar.mjs --droog *)",
+      "Bash(node src/radar.mjs --help)",
+      "Bash(node src/kaart.mjs --help)"
+    ],
+    "deny": ["Read(./.env)"]
+  }
+}

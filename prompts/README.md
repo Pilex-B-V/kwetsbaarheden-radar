@@ -7,7 +7,7 @@ grijze blok en vul in wat tussen vierkante haken staat.
 | --- | --- | --- | --- |
 | 1 | [De techniekkaart van één app, uit de code](01-techniekkaart-uit-de-code.md) | Claude Code | Je hebt de code en wilt weten waar de app van gemaakt is |
 | 2 | [De techniekkaart als je de code niet bij de hand hebt](02-techniekkaart-zonder-code.md) | Claude | De app is gebouwd met een bouwtool of door een bureau |
-| 3 | [De radar laten installeren door Claude Code](03-radar-installeren.md) | Claude Code | Je wilt hulp bij het opzetten |
+| 3 | [De radar laten instellen door Claude Code](03-radar-installeren.md) | Claude Code | Je hebt de radar binnengehaald en wilt dat Claude de rest doet |
 | 4 | [Een melding laten uitleggen](04-melding-uitleggen.md) | Claude | De mail noemt een lek en je wilt weten wat het betekent |
 | 5 | [De update laten uitvoeren](05-update-uitvoeren.md) | Claude Code | Je wilt de instructie uit de mail zelf laten uitvoeren |
 | 6 | [Van de eerste mail naar een plan](06-nulmeting-opruimen.md) | Claude | De eerste run geeft een lange lijst |

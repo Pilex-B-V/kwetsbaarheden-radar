@@ -501,3 +501,17 @@ test("ontbreekt de kaart, dan zegt de melding wat je doet", async () => {
   writeFileSync(join(map, "kaart.json"), "{ dit is geen json");
   await assert.rejects(laadKaart(join(map, "kaart.json")), /is geen geldige JSON/);
 });
+
+test("instellingen uit .env: wat al is gezet gaat voor, lege regels tellen niet", async () => {
+  const { laadEnv, leesEnvTekst } = await import("../src/lib/omgeving.mjs");
+  assert.deepEqual(
+    leesEnvTekst('# uitleg\nA=1\nexport B = "twee woorden"\nC=\'x=y\'\nD=waarde # toelichting\nE=\n\nrommel'),
+    { A: "1", B: "twee woorden", C: "x=y", D: "waarde", E: "" },
+  );
+  const map = mkdtempSync(join(tmpdir(), "radar-env-"));
+  writeFileSync(join(map, ".env"), "RADAR_MAIL_VAN=radar@voorbeeld.nl\nRADAR_MAIL_AAN=\nRADAR_TENANT_ID=uit-bestand\n");
+  const omgeving = { RADAR_TENANT_ID: "al-gezet" };
+  assert.deepEqual(laadEnv(join(map, ".env"), omgeving), ["RADAR_MAIL_VAN"]);
+  assert.deepEqual(omgeving, { RADAR_TENANT_ID: "al-gezet", RADAR_MAIL_VAN: "radar@voorbeeld.nl" });
+  assert.deepEqual(laadEnv(join(map, "bestaat-niet"), omgeving), []);
+});

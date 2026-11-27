@@ -49,14 +49,14 @@ jobs:
           # Zonder eigen token leest de radar alleen openbare repositories.
           GITHUB_TOKEN: ${{ github.token }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-          RADAR_ALLEEN_BIJ_NIEUWS: ${{ vars.RADAR_ALLEEN_BIJ_NIEUWS }}
-          RADAR_TIJDZONE: ${{ vars.RADAR_TIJDZONE }}
+          RADAR_ALLEEN_BIJ_NIEUWS: ${{ vars.RADAR_ALLEEN_BIJ_NIEUWS || secrets.RADAR_ALLEEN_BIJ_NIEUWS }}
+          RADAR_TIJDZONE: ${{ vars.RADAR_TIJDZONE || secrets.RADAR_TIJDZONE }}
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -f techniekkaart.json ]; then
             # Je techniekkaart en je rapport horen niet op straat te liggen.
             if [ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" != "true" ]; then
-              echo "::error::Deze repository is openbaar en bevat een techniekkaart. Zet hem op privé (Settings, General, Change visibility) en start de taak opnieuw."
+              echo "::error::Deze repository is openbaar en bevat een techniekkaart. Zet hem op privé (Settings, onderaan bij Danger Zone, Change visibility) en start de taak opnieuw."
               exit 1
             fi
             node src/radar.mjs
