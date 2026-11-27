@@ -17,6 +17,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"react-loadable@npm:@docusaurus/react-loadable@6.0.0":
+  version: 6.0.0
+  resolution: "@docusaurus/react-loadable@npm:6.0.0"
+  languageName: node
+  linkType: hard
+
+"pem@https://github.com/voorbeeld/pem.git#commit=abc":
+  version: 1.14.5
+  resolution: "pem@https://github.com/voorbeeld/pem.git#commit=abc"
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@npm%3A5.7.3#optional!builtin<compat/typescript>":
+  version: 5.7.3
+  resolution: "typescript@patch:typescript@npm%3A5.7.3#optional!builtin<compat/typescript>::version=5.7.3&hash=abc"
+  languageName: node
+  linkType: hard
+
 "next@npm:15.2.2":
   version: 15.2.2
   resolution: "next@npm:15.2.2"

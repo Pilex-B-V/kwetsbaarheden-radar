@@ -57,7 +57,13 @@ export function maakInstructie(app, bevindingen, datumTekst) {
     if (b.kwaadaardig) {
       regels.push("   Dit pakket staat gemeld als kwaadaardig. Verwijder het, wissel alle sleutels waar de app bij kon en zoek uit wat er is gebeurd.");
     } else if (b.fix) {
+      if (o.via?.length) regels.push(`   Komt mee met: ${o.via.join(", ")}`);
       regels.push(`   Opdracht: ${opdracht(o, b.fix)}`);
+      if (b.tussenstap) {
+        regels.push(
+          `   Kleinere stap: ${b.tussenstap.versie} blijft binnen de huidige hoofdversie en lost ${b.tussenstap.lostOp} van de ${b.tussenstap.totaal} meldingen op.`,
+        );
+      }
       if (b.zonderFix) regels.push(`   Let op: voor ${b.zonderFix} van deze meldingen is nog geen herstelversie.`);
     } else {
       regels.push(`   Er is nog geen herstelversie. Lees de melding voor een tijdelijke maatregel: ${b.meldingen[0].url}`);

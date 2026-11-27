@@ -71,8 +71,9 @@ test("package-lock.json", () => {
   // Een alias telt onder de echte naam van het pakket.
   assert.equal(vind(lijst, "string-width")[0].versie, "4.2.3");
   assert.equal(vind(lijst, "@scope/pakket")[0].versie, "2.0.0-beta.1");
-  // Een map uit de workspace is geen pakket.
+  // Een map uit de workspace is geen pakket, een fork op GitHub ook niet.
   assert.equal(vind(lijst, "lokaal").length, 0);
+  assert.equal(vind(lijst, "fork-van-iets").length, 0);
 });
 
 test("pnpm-lock.yaml, versie 9 en 6", () => {
@@ -97,9 +98,19 @@ test("pnpm-lock.yaml, versie 9 en 6", () => {
 
 test("yarn.lock, klassiek en berry", () => {
   const klassiek = uitYarnLock(fixture("yarn.lock"));
-  assert.deepEqual(klassiek.map((o) => `${o.naam}@${o.versie}`), ["@babel/code-frame@7.23.5", "next@15.2.2", "postcss@8.4.31"]);
+  // Een alias telt onder de echte naam; een eigen map of een fork op GitHub telt niet mee.
+  assert.deepEqual(klassiek.map((o) => `${o.naam}@${o.versie}`), [
+    "@babel/code-frame@7.23.5",
+    "next@15.2.2",
+    "postcss@8.4.31",
+    "string-width@4.2.3",
+  ]);
   const berry = uitYarnLock(fixture("yarn-berry.lock"));
-  assert.deepEqual(berry.map((o) => `${o.naam}@${o.versie}`), ["@scope/pakket@2.1.0", "next@15.2.2"]);
+  assert.deepEqual(berry.map((o) => `${o.naam}@${o.versie}`), [
+    "@scope/pakket@2.1.0",
+    "@docusaurus/react-loadable@6.0.0",
+    "next@15.2.2",
+  ]);
 });
 
 test("bun.lock", () => {
@@ -143,4 +154,19 @@ test("ontdubbelen houdt productie en direct vast", () => {
   ]);
   assert.equal(lijst.length, 2);
   assert.deepEqual(lijst[0], { ecosysteem: "npm", naam: "a", versie: "1.0.0", direct: true, dev: false });
+});
+
+test("via welk zelf gekozen onderdeel iets meekomt", () => {
+  const npm = uitPackageLock(fixture("package-lock.json"));
+  assert.deepEqual(vind(npm, "postcss").find((o) => o.versie === "8.4.31").via, ["next"]);
+  assert.equal(vind(npm, "next")[0].via, undefined);
+  const bun = uitBunLock(fixture("bun.lock"));
+  assert.deepEqual(vind(bun, "esbuild")[0].via, ["vite"]);
+  assert.deepEqual(vind(bun, "@tanstack/query-core")[0].via, ["@tanstack/react-query"]);
+  // Bij samenvoegen blijven de herkomsten bewaard.
+  const samen = ontdubbel([
+    { ecosysteem: "npm", naam: "x", versie: "1.0.0", direct: false, via: ["b"] },
+    { ecosysteem: "npm", naam: "x", versie: "1.0.0", direct: false, via: ["a"] },
+  ]);
+  assert.deepEqual(samen[0].via, ["a", "b"]);
 });

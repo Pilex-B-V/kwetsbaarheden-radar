@@ -475,3 +475,20 @@ test("een platformonderdeel dat niet te controleren is, telt als onvolledig", as
   assert.ok(r.waarschuwingen.some((w) => /Portaal: postgresql 16\.4 is vandaag niet gecontroleerd/.test(w)));
   assert.equal(r.bronnen.find((b) => b.naam === "NVD").gelukt, false);
 });
+
+test("tussenstap: wat de hoogste versie binnen je hoofdversie oplost", async () => {
+  const { zoekTussenstap } = await import("../src/lib/beoordeel.mjs");
+  const meldingen = [{ fix: "5.4.21" }, { fix: "5.0.12" }, { fix: "6.4.4" }, { fix: null }];
+  assert.deepEqual(zoekTussenstap("5.0.0", meldingen), { versie: "5.4.21", lostOp: 2, totaal: 4 });
+  assert.equal(zoekTussenstap("5.0.0", [{ fix: "6.4.4" }]), null);
+  // Onder versie 1 is een stap in het tweede getal al een hoofdversie.
+  assert.equal(zoekTussenstap("0.33.5", [{ fix: "0.35.5" }]), null);
+  assert.deepEqual(zoekTussenstap("0.33.5", [{ fix: "0.33.9" }, { fix: "0.35.5" }]), { versie: "0.33.9", lostOp: 1, totaal: 2 });
+});
+
+test("ontbreekt de kaart, dan zegt de melding wat je doet", async () => {
+  await assert.rejects(laadKaart(join(tmpdir(), "bestaat-niet", "techniekkaart.json")), /Er is nog geen .*npm run voorbeeld/);
+  const map = mkdtempSync(join(tmpdir(), "radar-stuk-"));
+  writeFileSync(join(map, "kaart.json"), "{ dit is geen json");
+  await assert.rejects(laadKaart(join(map, "kaart.json")), /is geen geldige JSON/);
+});

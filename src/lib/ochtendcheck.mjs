@@ -236,7 +236,7 @@ export async function ochtendcheck(kaart, staat, opties = {}) {
     ? await probeer(bronnen, "EPSS", () => haalEpss([...cves], opties), new Map())
     : new Map();
   const euvd = zwaar.size
-    ? await probeer(bronnen, "EUVD", () => haalEuvd([...zwaar].slice(0, 40), opties), new Map())
+    ? await probeer(bronnen, "EUVD", () => haalEuvd([...zwaar].slice(0, 100), opties), new Map())
     : new Map();
 
   const bevindingen = mislukt

@@ -4,6 +4,36 @@
 //
 // direct: staat het onderdeel zelf in package.json (true) of komt het mee met
 // een ander onderdeel (false). Onbekend is undefined.
+// via: bij een onderdeel dat meekomt, de zelf gekozen onderdelen waar het
+// onder hangt. Alleen bij lockfiles waar dat uit te lezen is.
+
+/**
+ * Zoekt voor elk onderdeel dat meekomt via welke zelf gekozen onderdelen het
+ * in de app zit. `ouders` is Map(naam -> Set(namen die ervan afhangen)).
+ */
+function zoekVia(naam, ouders, direct) {
+  const gevonden = new Set();
+  const gezien = new Set([naam]);
+  let laag = [naam];
+  while (laag.length && gevonden.size < 3) {
+    const volgende = [];
+    for (const kind of laag) {
+      for (const ouder of ouders.get(kind) ?? []) {
+        if (gezien.has(ouder)) continue;
+        gezien.add(ouder);
+        if (direct.has(ouder)) gevonden.add(ouder);
+        else volgende.push(ouder);
+      }
+    }
+    laag = volgende;
+  }
+  return [...gevonden].sort().slice(0, 3);
+}
+
+function voegOuderToe(ouders, kind, ouder) {
+  if (!ouders.has(kind)) ouders.set(kind, new Set());
+  ouders.get(kind).add(ouder);
+}
 
 const SEMVER = /^\d+\.\d+/;
 
@@ -24,18 +54,30 @@ export function uitPackageLock(tekst) {
       ...Object.keys(root.optionalDependencies ?? {}),
       ...Object.keys(root.devDependencies ?? {}),
     ]);
+    const mapnaamVan = (pad) => pad.slice(pad.lastIndexOf("node_modules/") + "node_modules/".length);
+    const ouders = new Map();
+    for (const [pad, p] of Object.entries(d.packages)) {
+      if (!pad || !pad.includes("node_modules/")) continue;
+      for (const kind of Object.keys({ ...p.dependencies, ...p.optionalDependencies })) {
+        voegOuderToe(ouders, kind, mapnaamVan(pad));
+      }
+    }
     for (const [pad, p] of Object.entries(d.packages)) {
       if (!pad || p.link || !p.version) continue;
-      const i = pad.lastIndexOf("node_modules/");
-      if (i < 0) continue; // een map uit de workspace, geen pakket
-      const mapnaam = pad.slice(i + "node_modules/".length);
+      // Een fork of een los bestand komt niet uit het register.
+      if (/^(git|github:|file:)/.test(p.resolved ?? "")) continue;
+      if (!pad.includes("node_modules/")) continue; // een map uit de workspace, geen pakket
+      const mapnaam = mapnaamVan(pad);
       const naam = p.name ?? mapnaam;
+      const isDirect = pad === `node_modules/${mapnaam}` && direct.has(mapnaam);
+      const via = isDirect ? [] : zoekVia(mapnaam, ouders, direct);
       uit.push({
         ecosysteem: "npm",
         naam,
         versie: p.version,
-        direct: pad === `node_modules/${mapnaam}` && direct.has(mapnaam),
+        direct: isDirect,
         dev: Boolean(p.dev),
+        ...(via.length ? { via } : {}),
       });
     }
     return uit;
@@ -123,14 +165,34 @@ export function uitPnpmLock(tekst) {
   }));
 }
 
-/** yarn.lock, klassiek (v1) en berry (v2 en hoger). */
+// Een onderdeel dat niet uit het register komt (een eigen map, een fork op
+// GitHub, een los bestand) heeft geen naam waar de bronnen iets mee kunnen.
+const NIET_UIT_REGISTER = /^(workspace:|patch:|file:|link:|portal:|git[+:@]|github:|https?:|ssh:)/;
+
+/**
+ * yarn.lock, klassiek (v1) en berry (v2 en hoger).
+ *
+ * Een onderdeel kan onder een andere naam zijn geïnstalleerd (een alias,
+ * bijvoorbeeld "string-width-cjs@npm:string-width@^4.2.0"). De radar zoekt dan
+ * op de echte naam: daar staan de meldingen onder.
+ */
 export function uitYarnLock(tekst) {
   const uit = [];
   let naam = null;
+  let versie = null;
+  let overslaan = false;
+  const sluitAf = () => {
+    if (naam && versie && !overslaan && SEMVER.test(versie)) {
+      uit.push({ ecosysteem: "npm", naam, versie });
+    }
+    naam = null;
+    versie = null;
+    overslaan = false;
+  };
   for (const regel of tekst.split(/\r?\n/)) {
     if (!regel || regel.startsWith("#")) continue;
     if (/^\S/.test(regel)) {
-      naam = null;
+      sluitAf();
       if (regel.startsWith("__metadata")) continue;
       const eerste = regel
         .replace(/:\s*$/, "")
@@ -138,18 +200,29 @@ export function uitYarnLock(tekst) {
         .trim()
         .replace(/^"|"$/g, "");
       const at = eerste.indexOf("@", 1);
-      if (at < 0 || /@(workspace|patch|file|link|portal):/.test(eerste)) {
-        continue;
-      }
+      if (at < 0) continue;
       naam = eerste.slice(0, at);
+      const bereik = eerste.slice(at + 1);
+      const alias = bereik.match(/^npm:(@?[^@]+)@/);
+      if (alias) naam = alias[1];
+      else if (NIET_UIT_REGISTER.test(bereik)) overslaan = true;
       continue;
     }
     const v = regel.match(/^\s+version:?\s+"?([^"\s]+)"?\s*$/);
-    if (v && naam && SEMVER.test(v[1])) {
-      uit.push({ ecosysteem: "npm", naam, versie: v[1] });
-      naam = null;
+    if (v) versie = v[1];
+    // Berry zet de echte herkomst in "resolution"; die is leidend.
+    const r = regel.match(/^\s+resolution:\s+"?([^"]+)"?\s*$/);
+    if (r) {
+      const echt = r[1].match(/^(@?[^@]+)@npm:/);
+      if (echt) naam = echt[1];
+      else overslaan = true;
+    }
+    // Klassiek: een onderdeel dat rechtstreeks van GitHub komt.
+    if (/^\s+resolved\s+"(git|https:\/\/(codeload\.)?github\.com)/.test(regel)) {
+      overslaan = true;
     }
   }
+  sluitAf();
   return uit;
 }
 
@@ -162,16 +235,29 @@ export function uitBunLock(tekst) {
     ...Object.keys(root.optionalDependencies ?? {}),
   ]);
   const dev = new Set(Object.keys(root.devDependencies ?? {}));
+  const direct = new Set([...prod, ...dev]);
+  const ouders = new Map();
+  for (const waarde of Object.values(d.packages ?? {})) {
+    const ouder = splitsNaamVersie(String(waarde?.[0] ?? ""))?.naam;
+    const info = waarde?.find?.((deel) => deel && typeof deel === "object" && !Array.isArray(deel));
+    if (!ouder || !info) continue;
+    for (const kind of Object.keys({ ...info.dependencies, ...info.optionalDependencies })) {
+      voegOuderToe(ouders, kind, ouder);
+    }
+  }
   const uit = [];
   for (const [sleutel, waarde] of Object.entries(d.packages ?? {})) {
     const nv = splitsNaamVersie(String(waarde?.[0] ?? ""));
     if (!nv || !SEMVER.test(nv.versie)) continue;
     const top = sleutel === nv.naam;
+    const isDirect = top && direct.has(nv.naam);
+    const via = isDirect ? [] : zoekVia(nv.naam, ouders, direct);
     uit.push({
       ecosysteem: "npm",
       ...nv,
-      direct: top && (prod.has(nv.naam) || dev.has(nv.naam)),
+      direct: isDirect,
       dev: top && dev.has(nv.naam) && !prod.has(nv.naam),
+      ...(via.length ? { via } : {}),
     });
   }
   return uit;
@@ -251,6 +337,7 @@ export function ontdubbel(onderdelen) {
       // Zit het ergens direct of in productie, dan telt dat.
       eerder.direct = eerder.direct || o.direct;
       eerder.dev = Boolean(eerder.dev && o.dev);
+      if (o.via?.length) eerder.via = [...new Set([...(eerder.via ?? []), ...o.via])].sort().slice(0, 3);
     }
   }
   return [...gezien.values()];

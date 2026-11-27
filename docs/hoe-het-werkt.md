@@ -71,7 +71,11 @@ Drie dingen op de kaart verschuiven dat:
 - **Alleen intern bereikbaar.** Staat `bereikbaar` op `intern`, dan schuift het
   advies één stap op: kritiek wordt deze week.
 - **Alleen in de ontwikkelomgeving.** Een onderdeel dat niet in de live app zit,
-  schuift ook één stap op.
+  schuift ook één stap op. Dat onderscheid staat volledig in `package-lock.json`
+  en `composer.lock`. Bij `pnpm-lock.yaml` en `bun.lock` weet de radar het
+  alleen van de onderdelen die je zelf koos, en een `yarn.lock` legt het niet
+  vast. Weet de radar het niet, dan telt hij het onderdeel als deel van de live
+  app.
 
 Actief misbruik en kwaadaardige pakketten blijven altijd vandaag.
 
@@ -87,6 +91,22 @@ de laagste versie die ze allemaal oplost.
 
 Een voorbeeld. Je draait Next.js 15.2.2. Eén melding is opgelost in 15.2.3, een
 andere in 15.5.29. De mail zegt dan: update naar 15.5.29.
+
+Vraagt de volledige oplossing om een nieuwe hoofdversie, dan noemt de mail ook
+de kleinere stap: de hoogste herstelversie binnen de hoofdversie die je nu hebt,
+met hoeveel van de meldingen die oplost. Zo kun je vandaag het grootste deel
+dichten en de grote stap inplannen.
+
+## Onderdelen die meekomen
+
+De meeste onderdelen in een app heb je niet zelf gekozen: ze komen mee met een
+onderdeel dat je wel hebt gekozen. Staat er in de mail Komt mee met express, dan
+hangt het kwetsbare onderdeel onder express. De instructie noemt de opdracht om
+het onderdeel zelf bij te werken. Lukt dat niet omdat het bovenliggende
+onderdeel een oude versie vastzet, werk dan dat bovenliggende onderdeel bij.
+
+De radar leest deze herkomst uit `package-lock.json` en `bun.lock`. Bij de
+andere lockfiles staat er alleen dat het onderdeel indirect in de app zit.
 
 ## Hoeveel werk het is
 

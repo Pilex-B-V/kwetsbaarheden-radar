@@ -90,7 +90,12 @@ export async function laadKaart(pad, { omgeving = process.env, fetchFn } = {}) {
   try {
     ruw = JSON.parse(await readFile(pad, "utf8"));
   } catch (fout) {
-    throw new Error(`Techniekkaart ${pad} is niet te lezen: ${fout.message}`);
+    if (fout.code === "ENOENT") {
+      throw new Error(
+        `Er is nog geen ${pad}. Maak hem aan (README, stap 3) of probeer eerst het voorbeeld: npm run voorbeeld`,
+      );
+    }
+    throw new Error(`${pad} is geen geldige JSON: ${fout.message}`);
   }
   const kaart = controleerKaart(ruw);
   const basis = dirname(resolve(pad));

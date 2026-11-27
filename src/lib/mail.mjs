@@ -28,6 +28,7 @@ function link(url, tekst) {
 }
 
 const meervoud = (n, een, meer) => `${n} ${n === 1 ? een : meer}`;
+const opsomming = (lijst) => (lijst.length < 2 ? lijst.join("") : `${lijst.slice(0, -1).join(", ")} en ${lijst.at(-1)}`);
 const hoofdletter = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** De onderwerpregel en de statuszin bovenaan. */
@@ -60,10 +61,19 @@ function intro(r) {
   if (r.mislukt) return MISLUKT;
   const apps = meervoud(r.cijfers.apps, "app", "apps");
   const onderdelen = meervoud(r.cijfers.onderdelen, "onderdeel", "onderdelen");
+  const nagelopen = `Ik heb je ${apps} (${onderdelen}) nagelopen op alles wat nu bekend is.`;
+  const n = r.cijfers.nieuwGepubliceerd;
+  if (n === null) {
+    return `${nagelopen} Hoeveel kwetsbaarheden er wereldwijd bij kwamen, is vandaag niet opgehaald.`;
+  }
   const periode = r.eersteRun ? "In de afgelopen 24 uur" : "Sinds de vorige check";
-  return r.cijfers.nieuwGepubliceerd === null
-    ? `Ik heb de bronnen vergeleken met je ${apps} (${onderdelen}). Hoeveel kwetsbaarheden er wereldwijd bij kwamen, is vandaag niet opgehaald.`
-    : `${periode} ${r.cijfers.nieuwGepubliceerd === 1 ? "is er 1 nieuwe kwetsbaarheid" : `zijn er ${r.cijfers.nieuwGepubliceerd} nieuwe kwetsbaarheden`} gepubliceerd. Ik heb ze vergeleken met je ${apps} (${onderdelen}).`;
+  const aantal =
+    n === 0
+      ? "zijn er geen nieuwe kwetsbaarheden"
+      : n === 1
+        ? "is er 1 nieuwe kwetsbaarheid"
+        : `zijn er ${n} nieuwe kwetsbaarheden`;
+  return `${periode} ${aantal} gepubliceerd. ${nagelopen}`;
 }
 
 const NAAM = { nodejs: "Node.js", node: "Node.js", postgresql: "PostgreSQL", postgres: "PostgreSQL", mysql: "MySQL", mariadb: "MariaDB", redis: "Redis", mongodb: "MongoDB", php: "PHP", python: "Python", wordpress: "WordPress", drupal: "Drupal", apache: "Apache" };
@@ -103,7 +113,13 @@ function signalen(b) {
   if (advies) uit.push(`NCSC-advies ${advies.id}: kans ${advies.kans}, schade ${advies.schade}.`);
   const kans = Math.max(0, ...b.meldingen.map((m) => m.epss ?? 0));
   if (kans >= 0.1) uit.push(`Geschatte kans op misbruik binnen 30 dagen: ${Math.round(kans * 100)}% (EPSS).`);
+  if (b.tussenstap) {
+    uit.push(
+      `Kan de nieuwe hoofdversie niet meteen: ${b.tussenstap.versie} lost ${b.tussenstap.lostOp} van de ${b.tussenstap.totaal} meldingen op.`,
+    );
+  }
   if (b.onderdeel.dev) uit.push("Zit alleen in de ontwikkelomgeving, niet in de live app.");
+  else if (b.onderdeel.via?.length) uit.push(`Komt mee met ${opsomming(b.onderdeel.via)}.`);
   else if (b.onderdeel.direct === false) uit.push("Zit indirect in de app: het komt mee met een ander onderdeel.");
   return uit;
 }
@@ -111,7 +127,7 @@ function signalen(b) {
 /* ── HTML ────────────────────────────────────────────────────────────── */
 
 function tegel(getal, label, kleur) {
-  return `<td width="33%" align="center" style="${LETTER}background:${kleur.vlak};border:1px solid ${kleur.rand};padding:14px 8px;">
+  return `<td width="32%" align="center" style="${LETTER}background:${kleur.vlak};border:1px solid ${kleur.rand};padding:14px 8px;">
 <div style="font-size:26px;line-height:30px;font-weight:600;color:${kleur.tekst};">${esc(getal)}</div>
 <div style="font-size:13px;line-height:18px;color:${kleur.tekst};">${esc(label)}</div></td>`;
 }
@@ -166,9 +182,12 @@ export function maakHtml(r) {
   if (r.eersteRun && !r.mislukt && r.bevindingen.length) {
     delen.push(`<div style="${alinea}padding-top:10px;">Dit is de eerste run. Alles wat nu open staat, telt daarom als nieuw. Vanaf morgen staat bij elk lek of het nieuw is, of sinds wanneer het open staat.</div>`);
   }
-  delen.push(`<table role="presentation" width="100%" cellpadding="0" cellspacing="6" style="margin:14px -6px 0 -6px;"><tr>
+  const tussen = '<td width="2%" style="font-size:0;line-height:0;">&nbsp;</td>';
+  delen.push(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 0 0;"><tr>
 ${tegel(r.cijfers.nieuwGepubliceerd ?? "?", "nieuw gepubliceerd", KLEUR.laag)}
+${tussen}
 ${tegel(r.mislukt ? "?" : r.cijfers.nieuwUitgelicht, r.cijfers.nieuwUitgelicht === 1 ? "raakt jou" : "raken jou", rood)}
+${tussen}
 ${tegel(r.mislukt ? "?" : r.cijfers.misbruikt, "actief misbruikt", r.mislukt ? KLEUR.laag : misbruik)}
 </tr></table>`);
 

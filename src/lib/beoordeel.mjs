@@ -266,6 +266,22 @@ export function stelBevindingenOp(kaart, osv, platformResultaten = [], verrijkin
   return bevindingen;
 }
 
+/**
+ * Vraagt de volledige oplossing om een nieuwe hoofdversie, dan is er vaak een
+ * kleinere stap die al een deel oplost: de hoogste herstelversie binnen de
+ * hoofdversie die je nu hebt. Geeft { versie, lostOp, totaal } of null.
+ */
+export function zoekTussenstap(versie, meldingen) {
+  const hoofd = ontleed(versie).getallen[0];
+  // Onder versie 1 telt elke stap in het tweede getal als hoofdversie.
+  const zelfdeLijn = (v) => sprong(versie, v) !== "major" && ontleed(v).getallen[0] === hoofd;
+  const binnen = meldingen.map((m) => m.fix).filter((v) => v && zelfdeLijn(v));
+  if (!binnen.length) return null;
+  const doel = hoogste(binnen);
+  const lostOp = meldingen.filter((m) => m.fix && vergelijk(m.fix, doel) <= 0).length;
+  return { versie: doel, lostOp, totaal: meldingen.length };
+}
+
 function maakBevinding(app, soort, onderdeel, meldingen) {
   const volgorde = { kritiek: 0, hoog: 1, midden: 2, laag: 3, onbekend: 4 };
   meldingen.sort(
@@ -282,6 +298,7 @@ function maakBevinding(app, soort, onderdeel, meldingen) {
   const zonderFix = meldingen.filter((m) => !m.fix).length;
   const stap = fix ? sprong(onderdeel.versie, fix) : "onbekend";
   const niveau = urgentie({ ernst, misbruikt, kwaadaardig, dev: onderdeel.dev }, app);
+  const tussenstap = stap === "major" ? zoekTussenstap(onderdeel.versie, meldingen) : null;
   return {
     app: app.naam,
     soort,
@@ -292,6 +309,7 @@ function maakBevinding(app, soort, onderdeel, meldingen) {
     misbruikt,
     kwaadaardig,
     fix,
+    tussenstap,
     zonderFix,
     stap,
     werk: kwaadaardig ? "direct uitzoeken, dit is geen gewone update" : werkTekst(stap, fix),
