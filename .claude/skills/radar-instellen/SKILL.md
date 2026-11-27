@@ -20,7 +20,8 @@ Doe dit zonder iets te vragen:
 2. `git remote -v`: waar komt deze kopie vandaan.
 3. Bestaat `techniekkaart.json` al? Bestaat `.env` al? Lees `.env` niet.
 4. `gh auth status`: is de gebruiker ingelogd bij GitHub. Dit is pas nodig in
-   fase 3; meld het alleen.
+   fase 3; meld het alleen. Ontbreekt de opdracht `gh`, zeg dan dat die van
+   cli.github.com komt en dat hij voor het uitrollen nodig is.
 
 Vertel daarna in een paar regels wat jullie gaan doen (de drie fasen) en wat je
 van de gebruiker nodig hebt. Gebruik de tabel uit `CLAUDE.md`. Vraag of je mag
@@ -63,7 +64,8 @@ De instellingen:
 
 1. Bestaat `.env` nog niet, maak hem dan aan met `cp .env.voorbeeld .env`.
 2. Laat de gebruiker `.env` zelf openen in een editor en de waarden invullen.
-   Lees het bestand niet en vraag niet naar de waarden.
+   Open het bestand niet, ook niet met een opdracht, en vraag niet naar de
+   waarden.
 3. Draai `npm run proefmail`. De eerste regel noemt welke instellingen zijn
    gelezen. Ontbreekt er een, dan zegt de melding welke.
 4. Vraag of de proefmail is aangekomen. Het onderwerp begint met Proef.
@@ -92,27 +94,38 @@ Vraag waar de radar moet draaien:
 
 1. **Inloggen.** `gh auth status`. Is de gebruiker niet ingelogd, laat hem dan
    zelf `gh auth login` draaien.
-2. **Een eigen, afgeschermde repository.** Wijst `origin` naar
-   `Pilex-B-V/kwetsbaarheden-radar`, maak die koppeling dan los met
-   `git remote remove origin`. Laat geen tweede koppeling staan: met twee
-   koppelingen weigert `gh secret set` te werken. Vraag onder welk account of
-   welke organisatie de kopie moet komen en hoe hij moet heten.
+2. **Een eigen, afgeschermde repository.** Kijk met `git remote -v` waar
+   `origin` heen wijst.
+   - Naar `Pilex-B-V/kwetsbaarheden-radar`: maak die koppeling los met
+     `git remote remove origin`.
+   - Ergens anders heen: draai `gh repo view --json visibility,isFork`. Is die
+     repository `PUBLIC` of een fork, stuur er dan niets heen. Maak `origin` los
+     en maak een nieuwe, afgeschermde repository. Is hij `PRIVATE` en geen fork,
+     vraag dan of de gebruiker die wil gebruiken en sla stap 4 over.
+
+   Laat geen tweede koppeling staan: met twee koppelingen weigert
+   `gh secret set` te werken. Vraag onder welk account of welke organisatie de
+   repository moet komen en hoe hij moet heten.
 3. **De kaart vastleggen.** `git add techniekkaart.json` en
    `git commit -m "Techniekkaart"`. Controleer met `git status` dat `.env` en
-   `uit` niet meegaan.
+   `uit` niet meegaan. Vraagt Git wie de gebruiker is, laat hem dan zelf
+   `git config user.name "..."` en `git config user.email "..."` draaien.
 4. **Aanmaken en versturen.** Na akkoord:
    `gh repo create <eigenaar>/<naam> --private --source=. --remote=origin --push`.
    Controleer daarna: `gh repo view --json visibility` moet `PRIVATE` geven.
 5. **De instellingen.** `gh secret set -f .env` zet alles wat in `.env` is
    ingevuld als secret in de repository, zonder dat de waarden in beeld komen.
-   Controleer de namen met `gh secret list`.
+   Controleer de namen met `gh secret list`. Bestaat `.env` niet, omdat de mail
+   is uitgesteld en er geen token nodig is, sla deze stap dan over.
 6. **Lockfiles uit afgeschermde repositories.** Staat er op de kaart een bron
    van de soort `github` naar een afgeschermde repository, dan is
    `RADAR_GITHUB_TOKEN` nodig. De stappen staan in de README onder Het leestoken voor GitHub. De
    gebruiker zet het token in `.env`; daarna draai je stap 5 opnieuw.
-7. **De eerste run.** `gh workflow run ochtendcheck.yml`, wacht een paar
-   seconden, en volg hem met `gh run watch`. Laat daarna de samenvatting zien
-   met `gh run view --log` of stuur de gebruiker naar het tabblad Actions.
+7. **De eerste run.** `gh workflow run ochtendcheck.yml`. Wacht een paar
+   seconden en zoek het nummer van de run op met
+   `gh run list --workflow ochtendcheck.yml --limit 1`. Volg hem met
+   `gh run watch <nummer>` en lees de uitkomst met `gh run view <nummer> --log`.
+   Het rapport staat ook in GitHub, onder Actions, bij de run.
 8. **Controleren.** Is de mail aangekomen? Staat er niets onder Niet volledig
    gecontroleerd?
 

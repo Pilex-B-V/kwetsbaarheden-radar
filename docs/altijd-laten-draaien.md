@@ -46,6 +46,9 @@ git commit -m "Techniekkaart"
 gh repo create jouw-bedrijf/kwetsbaarheden-radar --private --source=. --remote=origin --push
 ```
 
+Vraagt Git wie je bent, draai dan eerst `git config user.name "Je naam"` en
+`git config user.email "je@adres.nl"`.
+
 Controleer dat hij echt op privé staat. Het antwoord moet `PRIVATE` zijn:
 
 ```bash
@@ -60,7 +63,8 @@ gh repo view --json visibility --jq .visibility
 ### 2. Zet je instellingen in GitHub
 
 Dit zet alles wat je in `.env` hebt ingevuld als secret in je repository. De
-waarden komen niet in beeld:
+waarden komen niet in beeld. Heb je de mail overgeslagen en is er geen `.env`,
+sla deze stap dan over:
 
 ```bash
 gh secret set -f .env
@@ -96,8 +100,9 @@ staat bij elk lek of het nieuw is, of sinds wanneer het open staat.
 - **Het tijdstip** staat in `.github/workflows/ochtendcheck.yml`. De taak start
   om 07:40, zodat de mail er meestal voor 08:00 is. Bij drukte kan GitHub een
   taak later starten. Alleen werkdagen: verander `40 7 * * *` in `40 7 * * 1-5`.
-- **Een app toevoegen:** pas `techniekkaart.json` aan, test met `npm run droog`
-  en stuur de wijziging met `git push`.
+- **Een app toevoegen:** pas `techniekkaart.json` aan en test met
+  `npm run droog`. Leg de wijziging vast met `git commit -am "Kaart bijgewerkt"`
+  en stuur hem met `git push`.
 - **Een instelling wijzigen:** pas `.env` aan en draai `gh secret set -f .env`
   opnieuw.
 - **Een nieuwe versie van de radar** haal je op uit de openbare repository en

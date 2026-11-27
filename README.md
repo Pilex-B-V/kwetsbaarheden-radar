@@ -15,9 +15,16 @@ lekken gevonden. De radar legt de onderdelen van jouw apps elke ochtend naast
 zeven openbare bronnen en mailt je wat hij vindt. Meestal is dat: niks aan de
 hand.
 
-| Meestal | Als het raak is |
-| --- | --- |
-| <img src="docs/ochtendmail-rustig.png" alt="De ochtendmail op een dag dat er niets aan de hand is" width="400"> | <img src="docs/ochtendmail.png" alt="De ochtendmail op een dag dat een lek je app raakt" width="400"> |
+<table>
+  <tr>
+    <th>Meestal</th>
+    <th>Als het raak is</th>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/ochtendmail-rustig.png" alt="De ochtendmail op een dag dat er niets aan de hand is" width="400"></td>
+    <td valign="top"><img src="docs/ochtendmail.png" alt="De ochtendmail op een dag dat een lek je app raakt" width="400"></td>
+  </tr>
+</table>
 
 - **Eén mail, rond 08:00.** Wat is er nieuw, wat raakt jou, wat wordt actief
   misbruikt.
@@ -190,8 +197,9 @@ onder Niet volledig gecontroleerd.
    alleen de repositories van je apps.
 5. Zet bij **Permissions** alleen **Contents** op **Read-only**. Klik op
    **Generate token** en kopieer het token.
-6. Zet het in `.env`, achter `RADAR_GITHUB_TOKEN=` (zie de volgende fase voor
-   dat bestand).
+6. Zet het in het bestand `.env`, achter `RADAR_GITHUB_TOKEN=`. Bestaat `.env`
+   nog niet, maak het dan aan met `cp .env.voorbeeld .env`. Het bestand blijft
+   op je computer.
 
 Hoort de repository bij een organisatie, dan kan de eigenaar daarvan goedkeuring
 eisen. Het token werkt dan pas nadat het is goedgekeurd.
@@ -239,6 +247,11 @@ gh secret set -f .env
 gh workflow run ochtendcheck.yml
 ```
 
+Je hebt hiervoor [de opdracht `gh`](https://cli.github.com) nodig, één keer
+ingelogd met `gh auth login`. Heb je de mail overgeslagen en is er geen `.env`,
+sla dan de regel met `gh secret set` over. Vraagt Git wie je bent, draai dan eerst `git config user.name "Je naam"` en
+`git config user.email "je@adres.nl"`.
+
 Daarmee staat de radar in je eigen, afgeschermde repository, staan je
 instellingen daar als secret en is de eerste run gestart. Vanaf dat moment
 draait hij elke ochtend om 07:40 Nederlandse tijd, zodat de mail er meestal voor
@@ -283,6 +296,7 @@ Eén bestand, `techniekkaart.json`, met per app:
 | `doel` | Wat mensen ermee doen, in één zin |
 | `eigenaar` | Wie in het bedrijf erover gaat |
 | `developer` | Wie de update uitvoert: een collega, een bureau of je IT-partner |
+| `url` | Waar de app staat. Mag leeg blijven |
 | `gevoeligheid` | `hoog` als er persoons-, klant- of financiële gegevens in staan, anders `normaal` of `laag` |
 | `bereikbaar` | `internet` of `intern` |
 | `platform` | Wat eronder draait, met de versie |
@@ -333,8 +347,8 @@ staat dan in de mail onder Niet volledig gecontroleerd.
 ## Wat er in de mail staat
 
 - **Drie getallen.** Hoeveel kwetsbaarheden er wereldwijd zijn gepubliceerd
-  sinds de vorige check, hoeveel daarvan jouw apps raken en hoeveel er actief
-  worden misbruikt.
+  sinds de vorige check, hoeveel nieuwe lekken onder Nu oppakken jouw apps raken,
+  en hoeveel van je open lekken actief worden misbruikt.
 - **Nu oppakken.** Alles met het advies vandaag of deze week. Per onderdeel de
   ernst, wat een aanvaller ermee kan, de versie die het oplost en een indicatie
   van het werk.

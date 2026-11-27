@@ -6,8 +6,8 @@ niet in een openbare issue.
 - Gebruik op GitHub het tabblad **Security** en kies **Report a vulnerability**.
 - Of mail naar info@pilex.ai met in het onderwerp "Beveiligingsmelding radar".
 
-Vertel wat je hebt gevonden en hoe we het kunnen nabootsen. Je krijgt binnen
-vijf werkdagen een reactie. We vragen je het probleem niet openbaar te maken
+Vertel wat je hebt gevonden en hoe we het kunnen nabootsen. We laten je weten
+wat we met je melding doen. We vragen je het probleem niet openbaar te maken
 voordat het is opgelost.
 
 ## Wat de radar wel en niet doet

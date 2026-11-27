@@ -45,8 +45,9 @@ op de lijst met open punten. De radar is ook zonder mail te testen.
 
 - **Geheimen.** Wachtwoorden, tokens en secrets horen alleen in `.env` of in de
   secrets van GitHub. De gebruiker typt ze daar zelf in. Vraag er niet om in het
-  gesprek, zet ze niet in een opdracht en lees `.env` niet. Welke namen zijn
-  ingevuld, zie je aan de eerste regel die de radar afdrukt.
+  gesprek en zet ze niet in een opdracht. Open `.env` niet, ook niet met een
+  opdracht zoals `cat` of `type`. Welke namen zijn ingevuld, zie je aan de regel
+  Instellingen gelezen uit .env die de radar afdrukt.
 - **Afgeschermd.** `techniekkaart.json` en de map `uit` laten zien waar de apps
   kwetsbaar zijn. Zet ze alleen in een repository die op privé staat. Controleer
   dat voordat je iets met een kaart naar GitHub stuurt.
@@ -94,9 +95,12 @@ de developer. Laat de gebruiker `uit/ochtendmail.html` in de browser openen.
 ## De uitkomst uitleggen
 
 - **Nu oppakken** is alles met het advies vandaag of deze week. Begin daar.
-- **Niet volledig gecontroleerd** betekent dat een lockfile niet te lezen was of
-  een bron geen antwoord gaf. Onder Let op staat waarom. Los dat op voordat je
-  uitrolt: zo'n app is niet nagekeken.
+- **Niet volledig gecontroleerd** betekent dat een lockfile niet te lezen was,
+  dat de radar een platformnaam niet kent, of dat NVD of nodejs.org geen antwoord
+  gaf. Onder Let op staat waarom. Een lockfile of een naam los je op voordat je
+  uitrolt. Gaf een bron geen antwoord, draai dan later opnieuw. Een app waarvan
+  de gebruiker de code niet kan leveren, haal je van de kaart en zet je op de
+  lijst met open punten.
 - De eerste run is de nulmeting en kan een lange lijst geven. Eén update lost
   vaak tientallen meldingen op.
 - De radar ziet bekende lekken in onderdelen. Fouten in de eigen code en in

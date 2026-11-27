@@ -105,8 +105,9 @@ hangt het kwetsbare onderdeel onder express. De instructie noemt de opdracht om
 het onderdeel zelf bij te werken. Lukt dat niet omdat het bovenliggende
 onderdeel een oude versie vastzet, werk dan dat bovenliggende onderdeel bij.
 
-De radar leest deze herkomst uit `package-lock.json` en `bun.lock`. Bij de
-andere lockfiles staat er alleen dat het onderdeel indirect in de app zit.
+De radar leest deze herkomst uit `package-lock.json` en `bun.lock`. Bij
+`pnpm-lock.yaml` staat er alleen dat het onderdeel indirect in de app zit. Bij
+`yarn.lock` en `composer.lock` staat de herkomst er niet bij.
 
 ## Hoeveel werk het is
 

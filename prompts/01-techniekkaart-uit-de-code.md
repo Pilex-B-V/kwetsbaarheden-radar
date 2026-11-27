@@ -39,7 +39,7 @@ Deel 2, een JSON-blok dat ik in techniekkaart.json kan plakken, in precies deze 
 
 Regels voor het JSON-blok:
 - Zet "gevoeligheid" op hoog als er persoonsgegevens, klantgegevens of financiële gegevens in de app staan.
-- Gebruik voor "platform" alleen deze namen: nodejs, postgresql, mysql, mariadb, redis, mongodb, php, python, wordpress, drupal, apache. Zet iets anders er niet bij, maar noem het in deel 1.
+- Gebruik voor "platform" alleen deze namen: nodejs, postgresql, mysql, mariadb, redis, mongodb, php, python, wordpress, drupal, apache. Iets anders hoort alleen in deel 1.
 - Vul bij "bronnen" het echte pad van het lockfile in. Weet je de naam van de repository op GitHub niet, laat "repo" dan leeg en zeg het.
 - Laat "naam", "eigenaar" en "developer" leeg als je ze niet uit de code kunt halen. Verzin niets.
 ```

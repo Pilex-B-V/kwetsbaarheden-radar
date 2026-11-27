@@ -42,7 +42,9 @@ De bron op de kaart:
 ```
 
 Is de repository afgeschermd, dan heeft de radar een leestoken nodig
-(`RADAR_GITHUB_TOKEN` in `.env`). De stappen staan in de README onder Het leestoken voor GitHub.
+(`RADAR_GITHUB_TOKEN` in `.env`). De stappen staan in de README onder Het
+leestoken voor GitHub. Bestaat `.env` nog niet, maak het dan aan met
+`cp .env.voorbeeld .env`; de gebruiker zet het token er zelf in.
 Zonder token staat de app straks onder Niet volledig gecontroleerd.
 
 **Een map op deze computer.** Lees het lockfile in als momentopname:
@@ -119,8 +121,9 @@ Heeft `src/kaart.mjs` de app al aangemaakt, vul dan alleen de lege velden aan.
 
 Draai `npm run droog` en controleer:
 
-- De eerste regel noemt het aantal apps en onderdelen. Een gewone webapp heeft
-  honderden onderdelen. Staat er een handvol, dan is het lockfile niet gelezen.
+- De regel die met Techniekkaart begint, noemt het aantal apps en onderdelen.
+  Een gewone webapp heeft honderden onderdelen. Staat er een handvol, dan is het
+  lockfile niet gelezen.
 - Staat de app onder Niet volledig gecontroleerd, dan staat onder Let op waarom.
   Los dat op.
 
