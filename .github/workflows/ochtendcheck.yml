@@ -1,0 +1,72 @@
+name: Ochtendcheck
+
+# Elke ochtend om 07:40 Nederlandse tijd, zodat de mail er voor 08:00 is.
+# Niet op het hele uur: dan is het bij GitHub het drukst en start een taak later.
+on:
+  schedule:
+    - cron: "40 7 * * *"
+      timezone: "Europe/Amsterdam"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ochtendcheck
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    name: Bronnen vergelijken met de techniekkaart
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      # Wat de radar gisteren al zag, zodat de mail weet wat nieuw is.
+      - name: Geheugen terughalen
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .radar
+          key: radar-${{ github.run_id }}
+          restore-keys: radar-
+
+      - name: Ochtendcheck
+        env:
+          RADAR_TENANT_ID: ${{ secrets.RADAR_TENANT_ID }}
+          RADAR_CLIENT_ID: ${{ secrets.RADAR_CLIENT_ID }}
+          RADAR_CLIENT_SECRET: ${{ secrets.RADAR_CLIENT_SECRET }}
+          RADAR_MAIL_VAN: ${{ secrets.RADAR_MAIL_VAN }}
+          RADAR_MAIL_AAN: ${{ secrets.RADAR_MAIL_AAN }}
+          RADAR_WEBHOOK_URL: ${{ secrets.RADAR_WEBHOOK_URL }}
+          RADAR_GITHUB_TOKEN: ${{ secrets.RADAR_GITHUB_TOKEN }}
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          RADAR_ALLEEN_BIJ_NIEUWS: ${{ vars.RADAR_ALLEEN_BIJ_NIEUWS }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f techniekkaart.json ]; then
+            # Je techniekkaart en je rapport horen niet op straat te liggen.
+            if [ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" != "true" ]; then
+              echo "::error::Deze repository is openbaar en bevat een techniekkaart. Zet hem op privé (Settings, General, Change visibility) en start de taak opnieuw."
+              exit 1
+            fi
+            node src/radar.mjs
+          else
+            echo "Er is nog geen techniekkaart.json. De radar draait op het voorbeeld en verstuurt niets."
+            node src/radar.mjs --kaart voorbeeld/techniekkaart.json --droog
+          fi
+
+      - name: Mail en rapport bewaren
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ochtendcheck
+          path: uit/
+          retention-days: 14
+          if-no-files-found: ignore

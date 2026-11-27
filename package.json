@@ -1,0 +1,17 @@
+{
+  "name": "kwetsbaarheden-radar",
+  "version": "1.0.0",
+  "description": "Elke ochtend één mail: welke nieuwe kwetsbaarheden raken jouw apps, hoe erg is het en welke update lost het op.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "radar": "node src/radar.mjs",
+    "voorbeeld": "node src/radar.mjs --kaart voorbeeld/techniekkaart.json --droog",
+    "kaart": "node src/kaart.mjs",
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,25 @@
+lockfileVersion: '6.0'
+
+dependencies:
+  next:
+    specifier: 14.1.0
+    version: 14.1.0(react@18.2.0)
+
+devDependencies:
+  vitest:
+    specifier: ^1.2.0
+    version: 1.2.0
+
+packages:
+
+  /@babel/core@7.23.9:
+    resolution: {integrity: sha512-a}
+    dev: true
+
+  /next@14.1.0(react@18.2.0):
+    resolution: {integrity: sha512-b}
+    dev: false
+
+  /vitest@1.2.0:
+    resolution: {integrity: sha512-c}
+    dev: true

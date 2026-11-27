@@ -1,0 +1,9 @@
+# Wat de radar onthoudt en maakt
+.radar/
+uit/
+
+# Geheimen horen nooit in de repository
+.env
+.env.*
+
+node_modules/

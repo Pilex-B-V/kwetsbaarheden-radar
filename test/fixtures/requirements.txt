@@ -1,0 +1,7 @@
+# productie
+fastapi==0.115.6
+pydantic[email]==2.10.3 ; python_version >= "3.9"
+Jinja2==3.1.4 \
+    --hash=sha256:abc
+uvicorn>=0.30
+-r andere.txt

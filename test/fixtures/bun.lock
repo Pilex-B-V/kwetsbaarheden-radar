@@ -1,0 +1,23 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "urenapp",
+      "dependencies": {
+        "react": "^19.0.0",
+        "@tanstack/react-query": "^5.66.0",
+      },
+      "devDependencies": {
+        "vite": "^6.2.0",
+      },
+    },
+  },
+  "packages": {
+    "@tanstack/react-query": ["@tanstack/react-query@5.66.0", "", { "dependencies": { "@tanstack/query-core": "5.66.0" } }, "sha512-a"],
+    "@tanstack/query-core": ["@tanstack/query-core@5.66.0", "", {}, "sha512-b"],
+    "react": ["react@19.0.0", "", {}, "sha512-c"],
+    "vite": ["vite@6.2.0", "", { "dependencies": { "esbuild": "^0.25.0" } }, "sha512-d"],
+    "vite/esbuild": ["esbuild@0.25.0", "", {}, "sha512-e"],
+    "lokaal": ["lokaal@workspace:packages/lokaal"],
+  }
+}

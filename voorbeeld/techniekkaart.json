@@ -1,0 +1,54 @@
+{
+  "bedrijf": "Voorbeeld B.V.",
+  "apps": [
+    {
+      "naam": "Klantportaal",
+      "doel": "Klanten bekijken hun facturen en documenten",
+      "eigenaar": "Directie",
+      "developer": "Extern bureau",
+      "url": "https://portaal.voorbeeld.example",
+      "gevoeligheid": "hoog",
+      "bereikbaar": "internet",
+      "platform": [
+        { "naam": "nodejs", "versie": "22.11.0" },
+        { "naam": "postgresql", "versie": "16.4" }
+      ],
+      "onderdelen": [
+        { "ecosysteem": "npm", "naam": "next", "versie": "15.2.2", "direct": true, "beheerder": "npm" },
+        { "ecosysteem": "npm", "naam": "react", "versie": "19.0.0", "direct": true, "beheerder": "npm" },
+        { "ecosysteem": "npm", "naam": "react-dom", "versie": "19.0.0", "direct": true, "beheerder": "npm" },
+        { "ecosysteem": "npm", "naam": "@supabase/supabase-js", "versie": "2.49.1", "direct": true, "beheerder": "npm" },
+        { "ecosysteem": "npm", "naam": "zod", "versie": "3.24.2", "direct": true, "beheerder": "npm" }
+      ]
+    },
+    {
+      "naam": "Urenapp",
+      "doel": "Medewerkers boeken hun uren per project",
+      "eigenaar": "Operations",
+      "developer": "Zelf gebouwd met Lovable",
+      "gevoeligheid": "normaal",
+      "bereikbaar": "internet",
+      "platform": [],
+      "onderdelen": [
+        { "ecosysteem": "npm", "naam": "react", "versie": "19.2.0", "direct": true, "beheerder": "npm" },
+        { "ecosysteem": "npm", "naam": "react-dom", "versie": "19.2.0", "direct": true, "beheerder": "npm" },
+        { "ecosysteem": "npm", "naam": "date-fns", "versie": "4.1.0", "direct": true, "beheerder": "npm" },
+        { "ecosysteem": "npm", "naam": "@tanstack/react-query", "versie": "5.66.0", "direct": true, "beheerder": "npm" }
+      ]
+    },
+    {
+      "naam": "Offertetool",
+      "doel": "Verkoop maakt offertes op basis van vaste prijsregels",
+      "eigenaar": "Sales",
+      "developer": "Zelf gebouwd met Claude",
+      "gevoeligheid": "normaal",
+      "bereikbaar": "intern",
+      "platform": [],
+      "onderdelen": [
+        { "ecosysteem": "PyPI", "naam": "fastapi", "versie": "0.115.6", "direct": true, "beheerder": "pip" },
+        { "ecosysteem": "PyPI", "naam": "pydantic", "versie": "2.10.3", "direct": true, "beheerder": "pip" },
+        { "ecosysteem": "PyPI", "naam": "jinja2", "versie": "3.1.4", "direct": true, "beheerder": "pip" }
+      ]
+    }
+  ]
+}
