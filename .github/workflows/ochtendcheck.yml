@@ -46,6 +46,8 @@ jobs:
           RADAR_MAIL_AAN: ${{ secrets.RADAR_MAIL_AAN }}
           RADAR_WEBHOOK_URL: ${{ secrets.RADAR_WEBHOOK_URL }}
           RADAR_GITHUB_TOKEN: ${{ secrets.RADAR_GITHUB_TOKEN }}
+          # Zonder eigen token leest de radar alleen openbare repositories.
+          GITHUB_TOKEN: ${{ github.token }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
           RADAR_ALLEEN_BIJ_NIEUWS: ${{ vars.RADAR_ALLEEN_BIJ_NIEUWS }}
           RADAR_TIJDZONE: ${{ vars.RADAR_TIJDZONE }}

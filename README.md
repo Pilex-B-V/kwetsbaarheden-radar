@@ -131,8 +131,10 @@ in de lijst `apps`, met een komma ertussen. Wat elk veld betekent, staat bij
 [De techniekkaart](#de-techniekkaart).
 
 Bij `bronnen` staat waar het lockfile van de app staat. De radar haalt het elke
-ochtend op, dus de kaart klopt ook nadat de app is bijgewerkt. Daarvoor heeft
-hij een token nodig dat alleen mag lezen:
+ochtend op, dus de kaart klopt ook nadat de app is bijgewerkt. Staat de code van
+je app in een openbare repository, dan ben je klaar met deze stap. Is de
+repository afgeschermd, en dat is bij bedrijfssoftware meestal zo, dan heeft de
+radar een token nodig dat alleen mag lezen:
 
 1. Klik rechtsboven op je profielfoto en ga naar **Settings**, **Developer
    settings**, **Personal access tokens**, **Fine-grained tokens**. Klik op
@@ -305,7 +307,7 @@ and variables**, **Actions**.
 
 | Naam | Soort | Waarvoor |
 | --- | --- | --- |
-| `RADAR_GITHUB_TOKEN` | Secret | Leestoegang tot de repositories van je apps |
+| `RADAR_GITHUB_TOKEN` | Secret | Leestoegang tot de afgeschermde repositories van je apps |
 | `RADAR_TENANT_ID` | Secret | Outlook: het nummer van je Microsoft 365-omgeving |
 | `RADAR_CLIENT_ID` | Secret | Outlook: het nummer van de app-registratie |
 | `RADAR_CLIENT_SECRET` | Secret | Outlook: het wachtwoord van de app-registratie |

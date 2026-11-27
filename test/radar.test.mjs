@@ -379,10 +379,19 @@ test("kaart laden: lockfile van schijf en uit GitHub", async () => {
   const verzoek = fetchFn.verzoeken[0];
   assert.equal(verzoek.url, "https://api.github.com/repos/bedrijf/app/contents/api/requirements.txt?ref=main");
   assert.equal(verzoek.headers.authorization, "Bearer geheim");
-  assert.equal(kaart.apps[2].waarschuwingen.length, 2);
-  // Zonder token een duidelijke waarschuwing, geen crash.
-  const zonder = await laadKaart(join(map, "kaart.json"), { omgeving: {}, fetchFn });
-  assert.match(zonder.apps[1].waarschuwingen[0], /RADAR_GITHUB_TOKEN/);
+  assert.equal(kaart.apps[2].waarschuwingen.length, 1);
+  // Een openbare repository is zonder token te lezen.
+  const openbaar = nepFetch({ "api.github.com": new Response("flask==3.0.0\n") });
+  const zonder = await laadKaart(join(map, "kaart.json"), { omgeving: {}, fetchFn: openbaar });
+  assert.equal(zonder.apps[1].onderdelen.length, 1);
+  assert.equal(openbaar.verzoeken[0].headers.authorization, undefined);
+  // Een afgeschermde repository zonder token: een melding die zegt wat je doet.
+  const dicht = nepFetch({ "api.github.com": new Response("", { status: 404 }) });
+  const geen = await laadKaart(join(map, "kaart.json"), { omgeving: {}, fetchFn: dicht });
+  assert.match(geen.apps[1].waarschuwingen[0], /bedrijf\/app\/api\/requirements\.txt is niet gelezen: niet gevonden.*RADAR_GITHUB_TOKEN/);
+  // Met een token dat er niet bij mag of is verlopen.
+  const verlopen = await laadKaart(join(map, "kaart.json"), { omgeving: { RADAR_GITHUB_TOKEN: "oud" }, fetchFn: dicht });
+  assert.match(verlopen.apps[1].waarschuwingen[0], /geen toegang.*niet is verlopen/);
 });
 
 test("staat bewaren en teruglezen", async () => {

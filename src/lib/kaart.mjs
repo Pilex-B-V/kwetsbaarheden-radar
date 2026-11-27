@@ -60,25 +60,34 @@ async function leesBron(bron, basis, omgeving, fetchFn) {
   if (bron.soort === "bestand") {
     return readFile(resolve(basis, bron.pad), "utf8");
   }
-  const token = omgeving.RADAR_GITHUB_TOKEN;
-  if (!token) {
-    throw new Error(
-      `voor ${bron.repo} ontbreekt RADAR_GITHUB_TOKEN (een token dat alleen mag lezen).`,
-    );
-  }
+  // Een openbare repository is zonder token te lezen; voor een afgeschermde is
+  // een token nodig dat alleen mag lezen.
+  const token = omgeving.RADAR_GITHUB_TOKEN || omgeving.GITHUB_TOKEN;
   const ref = bron.ref ? `?ref=${encodeURIComponent(bron.ref)}` : "";
   const pad = bron.pad.split("/").map(encodeURIComponent).join("/");
-  return haalTekst(
-    `https://api.github.com/repos/${bron.repo}/contents/${pad}${ref}`,
-    {
-      headers: {
-        accept: "application/vnd.github.raw+json",
-        authorization: `Bearer ${token}`,
-        "x-github-api-version": "2022-11-28",
+  try {
+    return await haalTekst(
+      `https://api.github.com/repos/${bron.repo}/contents/${pad}${ref}`,
+      {
+        headers: {
+          accept: "application/vnd.github.raw+json",
+          "x-github-api-version": "2022-11-28",
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
+        fetchFn,
       },
-      fetchFn,
-    },
-  );
+    );
+  } catch (fout) {
+    // GitHub antwoordt met 404 als je er niet bij mag, om niets te verraden.
+    if (/status 40[134]/.test(fout.message)) {
+      throw new Error(
+        omgeving.RADAR_GITHUB_TOKEN
+          ? "geen toegang. Controleer de naam van de repository en het pad, en of het token bij deze repository mag en niet is verlopen."
+          : "niet gevonden. Klopt de naam en het pad? Is de repository afgeschermd, zet dan een leestoken in RADAR_GITHUB_TOKEN (README, stap 3).",
+      );
+    }
+    throw fout;
+  }
 }
 
 /**
@@ -112,7 +121,7 @@ export async function laadKaart(pad, { omgeving = process.env, fetchFn } = {}) {
       }
     }
     app.onderdelen = ontdubbel(onderdelen);
-    if (!app.onderdelen.length && !app.platform.length) {
+    if (!app.onderdelen.length && !app.platform.length && !app.waarschuwingen.length) {
       app.waarschuwingen.push(
         "Er zijn geen onderdelen gevonden, dus deze app is niet gecontroleerd.",
       );
