@@ -48,6 +48,7 @@ jobs:
           RADAR_GITHUB_TOKEN: ${{ secrets.RADAR_GITHUB_TOKEN }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
           RADAR_ALLEEN_BIJ_NIEUWS: ${{ vars.RADAR_ALLEEN_BIJ_NIEUWS }}
+          RADAR_TIJDZONE: ${{ vars.RADAR_TIJDZONE }}
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -f techniekkaart.json ]; then

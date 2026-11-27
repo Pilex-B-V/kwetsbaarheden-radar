@@ -44,6 +44,12 @@ export function status(r) {
   else if (r.cijfers.openOverig > 0) kort = "niks dringends";
   else kort = "niks aan de hand";
   if (r.eersteRun && (n > 0 || r.cijfers.nieuwOverig > 0)) kort = `nulmeting: ${kort}`;
+  // Een app die niet (helemaal) is nagekeken, mag nooit schuilgaan achter "niks aan de hand".
+  const half = r.cijfers.onvolledig ?? 0;
+  if (half > 0) {
+    const tekst = `${meervoud(half, "app", "apps")} niet volledig gecontroleerd`;
+    kort = kort === "niks aan de hand" ? tekst : `${kort}, ${tekst}`;
+  }
   return { kort, onderwerp: `Ochtendcheck ${r.datum.kort} · ${kort}` };
 }
 
@@ -158,7 +164,7 @@ export function maakHtml(r) {
   delen.push(`<div style="${alinea}padding-top:16px;">Goedemorgen,</div>`);
   delen.push(`<div style="${alinea}padding-top:10px;">${esc(intro(r))}</div>`);
   if (r.eersteRun && !r.mislukt && r.bevindingen.length) {
-    delen.push(`<div style="${alinea}padding-top:10px;">Dit is de eerste run. Alles wat nu open staat, telt daarom als nieuw. Vanaf morgen zie je alleen wat erbij komt.</div>`);
+    delen.push(`<div style="${alinea}padding-top:10px;">Dit is de eerste run. Alles wat nu open staat, telt daarom als nieuw. Vanaf morgen staat bij elk lek of het nieuw is, of sinds wanneer het open staat.</div>`);
   }
   delen.push(`<table role="presentation" width="100%" cellpadding="0" cellspacing="6" style="margin:14px -6px 0 -6px;"><tr>
 ${tegel(r.cijfers.nieuwGepubliceerd ?? "?", "nieuw gepubliceerd", KLEUR.laag)}
@@ -181,6 +187,10 @@ ${tegel(r.mislukt ? "?" : r.cijfers.misbruikt, "actief misbruikt", r.mislukt ? K
     delen.push(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 0 0;"><tr>
 <td style="${LETTER}background:${KLEUR.goed.vlak};border:1px solid ${KLEUR.goed.rand};padding:12px 16px;font-size:14px;line-height:20px;color:${KLEUR.goed.tekst};"><b>Geen actie nodig:</b> ${esc(r.rustig.join(", "))}</td></tr></table>`);
   }
+  if (r.onvolledig?.length) {
+    delen.push(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:12px 0 0 0;"><tr>
+<td style="${LETTER}background:${KLEUR.midden.vlak};border:1px solid ${KLEUR.midden.rand};padding:12px 16px;font-size:14px;line-height:20px;color:${KLEUR.midden.tekst};"><b>Niet volledig gecontroleerd:</b> ${esc(r.onvolledig.join(", "))}. Onder Let op staat waarom.</td></tr></table>`);
+  }
   if (r.ncscNieuws.length) {
     delen.push(`<div style="${kopje}">NCSC noemt techniek van je kaart</div>`);
     delen.push(
@@ -197,7 +207,7 @@ ${tegel(r.mislukt ? "?" : r.cijfers.misbruikt, "actief misbruikt", r.mislukt ? K
   }
   if (r.instructiesMail.length) {
     delen.push(`<div style="${kopje}">Voor je developer</div>`);
-    delen.push(`<div style="${alinea}">Stuur de instructie hieronder door. Hij is ook als opdracht te plakken in Claude Code.</div>`);
+    delen.push(`<div style="${alinea}">Stuur de instructie hieronder door aan wie de update uitvoert.</div>`);
     for (const ins of r.instructiesMail) {
       delen.push(
         `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 0 0;"><tr><td style="background:#F5F7FA;border:1px solid #E4E7EB;padding:12px 14px;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:18px;color:#1F2933;white-space:pre-wrap;">${esc(ins.tekst).replace(/\n/g, "<br>")}</td></tr></table>`,
@@ -227,7 +237,7 @@ export function maakTekst(r) {
   const s = status(r);
   const regels = [s.onderwerp, "", "Goedemorgen,", "", intro(r), ""];
   if (r.eersteRun && !r.mislukt && r.bevindingen.length) {
-    regels.push("Dit is de eerste run. Alles wat nu open staat, telt daarom als nieuw. Vanaf morgen zie je alleen wat erbij komt.", "");
+    regels.push("Dit is de eerste run. Alles wat nu open staat, telt daarom als nieuw. Vanaf morgen staat bij elk lek of het nieuw is, of sinds wanneer het open staat.", "");
   }
   regels.push(
     r.mislukt
@@ -260,6 +270,7 @@ export function maakTekst(r) {
     regels.push("");
   }
   if (r.rustig.length) regels.push(`Geen actie nodig: ${r.rustig.join(", ")}`, "");
+  if (r.onvolledig?.length) regels.push(`Niet volledig gecontroleerd: ${r.onvolledig.join(", ")}. Onder Let op staat waarom.`, "");
   for (const a of r.ncscNieuws) regels.push(`NCSC ${a.id} (${a.kans}/${a.schade}): ${a.titel}. Raakt mogelijk: ${a.raakt.join(", ")}. ${a.link}`);
   if (r.ncscNieuws.length) regels.push("");
   if (r.waarschuwingen.length) regels.push("LET OP", ...r.waarschuwingen.map((w) => `- ${w}`), "");

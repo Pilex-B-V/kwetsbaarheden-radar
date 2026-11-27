@@ -88,7 +88,8 @@ Twee dingen om te weten:
 
 ## Stap 4: test het
 
-Zet de vijf waarden lokaal in je terminal en draai de radar één keer:
+Zet de vijf waarden lokaal in je terminal en draai de radar één keer. Op een
+Mac of in Linux:
 
 ```bash
 export RADAR_TENANT_ID="..."
@@ -96,6 +97,17 @@ export RADAR_CLIENT_ID="..."
 export RADAR_CLIENT_SECRET="..."
 export RADAR_MAIL_VAN="radar@jouwbedrijf.nl"
 export RADAR_MAIL_AAN="jij@jouwbedrijf.nl"
+node src/radar.mjs
+```
+
+In PowerShell op Windows:
+
+```powershell
+$env:RADAR_TENANT_ID = "..."
+$env:RADAR_CLIENT_ID = "..."
+$env:RADAR_CLIENT_SECRET = "..."
+$env:RADAR_MAIL_VAN = "radar@jouwbedrijf.nl"
+$env:RADAR_MAIL_AAN = "jij@jouwbedrijf.nl"
 node src/radar.mjs
 ```
 
@@ -108,7 +120,8 @@ workflow** in stap 5.
 In je eigen, afgeschermde repository: **Settings**, **Secrets and variables**,
 **Actions**, **New repository secret**. Maak de vijf secrets uit de tabel
 bovenaan. Ga daarna naar **Actions**, kies **Ochtendcheck** en klik op **Run
-workflow**. Binnen een minuut hoort de mail er te zijn.
+workflow**. Na een paar minuten hoort de mail er te zijn. Krijg je een status
+403, dan zijn de rechten uit stap 3 nog niet doorgekomen: wacht tot twee uur.
 
 ## Als het niet werkt
 

@@ -1,6 +1,6 @@
 // OSV.dev: de open database van Google waarin onder meer de GitHub Advisory
 // Database, PyPA en de meldingen over kwaadaardige pakketten samenkomen.
-// De radar stuurt per onderdeel alleen ecosysteem, naam en versie.
+// De radar stuurt per onderdeel alleen ecosysteem, naam en versie mee.
 // Documentatie: https://google.github.io/osv.dev/api/
 
 import { gelijktijdig, haalJson } from "../http.mjs";

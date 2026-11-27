@@ -1,6 +1,5 @@
 // De update-instructie voor je developer of IT-partner: per app welke
-// onderdelen naar welke versie moeten, met de opdracht erbij. De tekst is ook
-// als prompt te gebruiken in Claude Code, in de map van de app.
+// onderdelen naar welke versie moeten, met de opdracht erbij.
 
 const PLATFORM = { nodejs: "Node.js", node: "Node.js", postgresql: "PostgreSQL", postgres: "PostgreSQL" };
 const naamVan = (o) => (o.ecosysteem === "platform" ? (PLATFORM[o.naam.toLowerCase()] ?? o.naam) : o.naam);

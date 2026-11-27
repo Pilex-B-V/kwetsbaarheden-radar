@@ -273,7 +273,8 @@ test("ochtendcheck: van kaart tot mail", async () => {
   assert.deepEqual(r.ncscNieuws.map((a) => a.id), ["NCSC-2026-0499"]);
 
   const s = status(r);
-  assert.equal(s.onderwerp, "Ochtendcheck vr 27 nov · nulmeting: 2 lekken raken je apps");
+  assert.equal(s.onderwerp, "Ochtendcheck vr 27 nov · nulmeting: 2 lekken raken je apps, 1 app niet volledig gecontroleerd");
+  assert.deepEqual(r.onvolledig, ["Klantportaal"]);
 
   const html = maakHtml({ ...r, instructiesMail: r.instructiesMail });
   assert.ok(html.includes("Wordt actief misbruikt (CISA KEV, sinds 2026-11-26)."));
@@ -304,7 +305,7 @@ test("tweede run: alleen wat erbij kwam is nieuw", async () => {
   const r = await ochtendcheck(kaart, staat, { fetchFn: nepFetch(), nu: NU, omgeving: {} });
   assert.ok(r.bevindingen.every((b) => b.nieuw === false));
   assert.equal(r.bevindingen[0].sinds, "26 nov");
-  assert.equal(status(r).onderwerp, "Ochtendcheck vr 27 nov · niets nieuws, 2 updates staan nog open");
+  assert.equal(status(r).onderwerp, "Ochtendcheck vr 27 nov · niets nieuws, 2 updates staan nog open, 1 app niet volledig gecontroleerd");
   assert.ok(maakHtml(r).includes("open sinds 26 nov"));
 });
 
@@ -443,4 +444,34 @@ test("verzendwijze: webhook, niets, of een halve instelling", async () => {
 test("esc maakt tekens onschadelijk", () => {
   assert.equal(esc(`<a href="x" onclick='y'>&</a>`), "&lt;a href=&quot;x&quot; onclick=&#39;y&#39;&gt;&amp;&lt;/a&gt;");
   assert.equal(esc(null), "");
+});
+
+test("een app die niet is gelezen, staat nooit onder geen actie nodig", async () => {
+  const kaart = controleerKaart({ apps: [KAART.apps[1], { naam: "Offertetool", bronnen: [{ soort: "bestand", pad: "weg/package-lock.json" }] }] });
+  // Zo zet laadKaart het neer als een lockfile niet te lezen is.
+  kaart.apps[1].waarschuwingen = ["weg/package-lock.json is niet gelezen: bestaat niet"];
+  const r = await ochtendcheck(kaart, legeStaat(), { fetchFn: nepFetch(), nu: NU, omgeving: {} });
+  assert.deepEqual(r.rustig, ["Urenapp"]);
+  assert.deepEqual(r.onvolledig, ["Offertetool"]);
+  assert.equal(status(r).onderwerp, "Ochtendcheck vr 27 nov · 1 app niet volledig gecontroleerd");
+  const html = maakHtml(r);
+  assert.ok(html.includes("Niet volledig gecontroleerd:</b> Offertetool"));
+  assert.ok(html.includes("Geen actie nodig:</b> Urenapp"));
+  assert.ok(maakTekst(r).includes("Niet volledig gecontroleerd: Offertetool"));
+});
+
+test("een platformonderdeel dat niet te controleren is, telt als onvolledig", async () => {
+  const kaart = controleerKaart({
+    apps: [
+      { naam: "Portaal", platform: [{ naam: "postgresql", versie: "16.4" }] },
+      { naam: "Site", platform: [{ naam: "vreemd", versie: "1.0" }] },
+      { naam: "Urenapp", platform: [{ naam: "nodejs", versie: "22.23.5" }] },
+    ],
+  });
+  const fetchFn = nepFetch({ virtualMatchString: new Response("", { status: 400 }) });
+  const r = await ochtendcheck(kaart, legeStaat(), { fetchFn, nu: NU, omgeving: {}, nvdPauze: 1 });
+  assert.deepEqual(r.onvolledig, ["Portaal", "Site"]);
+  assert.deepEqual(r.rustig, ["Urenapp"]);
+  assert.ok(r.waarschuwingen.some((w) => /Portaal: postgresql 16\.4 is vandaag niet gecontroleerd/.test(w)));
+  assert.equal(r.bronnen.find((b) => b.naam === "NVD").gelukt, false);
 });

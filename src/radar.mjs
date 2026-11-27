@@ -49,8 +49,8 @@ async function hoofd() {
     return 0;
   }
   const omgeving = process.env;
-  const kaartPad = optie.kaart ?? omgeving.RADAR_KAART ?? "techniekkaart.json";
-  const staatMap = omgeving.RADAR_STAAT_MAP ?? ".radar";
+  const kaartPad = optie.kaart || omgeving.RADAR_KAART || "techniekkaart.json";
+  const staatMap = omgeving.RADAR_STAAT_MAP || ".radar";
 
   // Een halve instelling is een fout: liever nu stoppen dan stil niets sturen.
   const wijze = optie.droog ? null : verzendwijze(omgeving);
@@ -66,7 +66,7 @@ async function hoofd() {
   );
   const rapport = await ochtendcheck(kaart, staat, {
     omgeving,
-    tijdzone: omgeving.RADAR_TIJDZONE ?? "Europe/Amsterdam",
+    tijdzone: omgeving.RADAR_TIJDZONE || "Europe/Amsterdam",
   });
 
   const s = status(rapport);

@@ -10,12 +10,12 @@ openbare bronnen en mailt je wat hij vindt. Meestal is dat: niks aan de hand.
 
 ![Voorbeeld van de ochtendmail](docs/ochtendmail.png)
 
-- **Eén mail, voor 08:00.** Wat is er nieuw, wat raakt jou, wat wordt actief
+- **Eén mail, rond 08:00.** Wat is er nieuw, wat raakt jou, wat wordt actief
   misbruikt.
 - **Per lek een oplossing.** Naar welke versie je moet en hoeveel werk dat
   ongeveer is.
-- **Een instructie voor je developer.** Klaar om door te sturen, of om in Claude
-  Code te plakken.
+- **Een instructie voor je developer.** Per app de exacte opdrachten, klaar om
+  door te sturen.
 - **Zeven openbare bronnen.** OSV.dev met de GitHub Advisory Database, NVD, CISA
   KEV, EUVD, EPSS, het NCSC en nodejs.org.
 - **Alleen lezen.** De radar past niets aan in je apps.
@@ -50,8 +50,17 @@ Hoe de radar ernst, urgentie en de herstelversie bepaalt, staat in
 ## In gebruik nemen
 
 Je hebt een GitHub-account nodig, en een beheerder van Microsoft 365 als je de
-mail in Outlook wilt ontvangen. Reken op een uur voor de eerste app. Liever
-niet zelf typen? Met de prompt in
+mail in Outlook wilt ontvangen. Reken op een uur voor de eerste app.
+
+Er zijn twee manieren om de stappen te doen:
+
+- **Alleen in de browser.** Je hoeft niets te installeren. Je maakt je kopie
+  (stap 1), maakt `techniekkaart.json` aan in GitHub via **Add file**, **Create
+  new file** (stap 3), zet de secrets erin (stap 4) en start de taak (stap 5).
+- **Op je eigen computer.** Je hebt dan Git en Node.js 20 of hoger nodig. Zo
+  kun je het voorbeeld draaien en je kaart testen voordat je iets verstuurt.
+
+Liever niet zelf typen? Met de prompt in
 [prompts/03-radar-installeren.md](prompts/03-radar-installeren.md) loopt Claude
 Code de stappen met je door.
 
@@ -65,7 +74,7 @@ repository**. Zet de zichtbaarheid op **Private**.
 > horen niet in een openbare repository. De taak weigert te draaien als er een
 > techniekkaart in een openbare repository staat.
 
-Haal je kopie daarna binnen:
+Werk je op je eigen computer, haal je kopie dan binnen:
 
 ```bash
 git clone https://github.com/<jouw-account>/<jouw-kopie>.git
@@ -84,11 +93,27 @@ hoger nodig; installeren van pakketten hoeft niet.
 
 ### 3. Zet je apps op de kaart
 
-Kopieer het voorbeeld en vul je eigen apps in:
+Maak in de hoofdmap van je kopie het bestand `techniekkaart.json`. De vorm is
+altijd dezelfde: een lijst `apps` met per app een blok.
 
-```bash
-cp voorbeeld/techniekkaart.json techniekkaart.json
+```json
+{
+  "bedrijf": "Jouw bedrijf",
+  "apps": [
+    {
+      "naam": "Klantportaal",
+      "gevoeligheid": "hoog",
+      "bereikbaar": "internet",
+      "platform": [{ "naam": "nodejs", "versie": "22.11.0" }],
+      "bronnen": [{ "soort": "github", "repo": "jouw-bedrijf/klantportaal", "pad": "package-lock.json" }]
+    }
+  ]
+}
 ```
+
+Een tweede app zet je als volgend blok in de lijst, met een komma ertussen. Een
+uitgebreid voorbeeld staat in
+[voorbeeld/techniekkaart.json](voorbeeld/techniekkaart.json).
 
 Voor de onderdelen van een app zijn er twee manieren.
 
@@ -99,9 +124,13 @@ lockfile elke ochtend op, dus de kaart klopt ook nadat je app is bijgewerkt:
 "bronnen": [{ "soort": "github", "repo": "jouw-bedrijf/klantportaal", "pad": "package-lock.json" }]
 ```
 
-Maak hiervoor in GitHub een fine-grained token dat alleen de inhoud van die
-repositories mag lezen (Contents: Read-only) en zet het als secret
-`RADAR_GITHUB_TOKEN`.
+Maak hiervoor in GitHub een fine-grained token (Settings, Developer settings,
+Personal access tokens, Fine-grained tokens). Kies bij **Resource owner** de
+eigenaar van de repositories, bij **Repository access** alleen de repositories
+van je apps, en zet bij **Permissions** alleen Contents op Read-only. Zet het
+token als secret `RADAR_GITHUB_TOKEN`. Een token heeft een einddatum: zet die in
+je agenda, want daarna leest de radar je lockfiles niet meer. De mail zegt het
+als dat gebeurt.
 
 **Als momentopname in de kaart.** Handig als de code niet in GitHub staat:
 
@@ -120,6 +149,12 @@ Controleer de kaart met een droge run. Die verstuurt en onthoudt niets:
 node src/radar.mjs --droog
 ```
 
+Haalt de radar je lockfiles uit GitHub, dan heeft een lokale run het token
+nodig (`RADAR_GITHUB_TOKEN`). Makkelijker is het om de kaart in je kopie te
+zetten en de taak in GitHub te starten (stap 5). Zolang de mail niet is
+ingesteld, verstuurt hij niets en staat het rapport in de samenvatting van de
+run.
+
 ### 4. Koppel Outlook
 
 Volg [docs/outlook-instellen.md](docs/outlook-instellen.md). Je maakt een
@@ -129,7 +164,9 @@ een webhook.
 
 ### 5. Zet de ochtendcheck aan
 
-Zet je kaart in je kopie:
+Zet je kaart in je kopie. In de browser: **Add file**, **Create new file**, naam
+`techniekkaart.json`, plak de inhoud en klik op **Commit changes**. Of vanaf je
+computer:
 
 ```bash
 git add techniekkaart.json
@@ -138,9 +175,11 @@ git push
 ```
 
 Ga in GitHub naar **Actions**, kies **Ochtendcheck** en klik op **Run
-workflow**. Daarna draait de taak elke ochtend om 07:40 Nederlandse tijd. De
-eerste mail is je nulmeting: alles wat nu open staat. Vanaf de tweede mail zie
-je wat erbij komt.
+workflow**. Daarna start de taak elke ochtend om 07:40 Nederlandse tijd, zodat
+de mail er meestal voor 08:00 is. Bij drukte kan GitHub een taak later starten.
+
+De eerste mail is je nulmeting: alles wat nu open staat. Vanaf de tweede mail
+staat bij elk lek of het nieuw is, of sinds wanneer het open staat.
 
 ## De techniekkaart
 
@@ -183,8 +222,11 @@ Alles stel je in met omgevingsvariabelen. In GitHub zijn dat secrets
 | `RADAR_WEBHOOK_URL` | In plaats van Outlook: het adres waar de mail als JSON heen gaat |
 | `RADAR_GITHUB_TOKEN` | Leestoegang tot de repositories van je apps, voor bronnen van de soort `github` |
 | `NVD_API_KEY` | Optioneel. Met een gratis sleutel van NVD gaat de controle van platformonderdelen sneller |
-| `RADAR_ALLEEN_BIJ_NIEUWS` | Optioneel, als variabele. Zet op `ja` om alleen een mail te krijgen als er iets nieuws is |
-| `RADAR_TIJDZONE` | Optioneel. Standaard `Europe/Amsterdam` |
+| `RADAR_ALLEEN_BIJ_NIEUWS` | Optioneel. Zet op `ja` om alleen een mail te krijgen als er iets nieuws is |
+| `RADAR_TIJDZONE` | Optioneel. De tijdzone voor de datum in de mail, standaard `Europe/Amsterdam` |
+
+De laatste twee zet je in GitHub niet als secret maar als variabele: hetzelfde
+scherm, tabblad **Variables**.
 
 Ons advies: laat de mail elke dag komen, ook als er niets is. Een mail die
 wegblijft, valt dan op.
@@ -209,12 +251,17 @@ dat je een bekend lek in een onderdeel niet mist.
 
 - **Wat er naar buiten gaat.** De radar stuurt per onderdeel alleen ecosysteem,
   naam en versie naar OSV.dev, en de naam en versie van platformonderdelen naar
-  NVD. De namen van je apps, je code en je gegevens verlaten je omgeving niet.
-- **Wat hij mag.** De taak heeft in GitHub alleen leesrechten. Het token voor je
-  app-repositories mag alleen lezen. De app-registratie mag alleen versturen, en
-  alleen vanuit één postvak.
+  NVD. Van de meldingen die hij vindt, stuurt hij het nummer naar EPSS en EUVD
+  om er de kans op misbruik bij te zoeken. De namen van je apps, je code en je
+  gegevens verlaten je omgeving niet.
+- **Wat hij mag.** De taak heeft in GitHub alleen leesrechten. Het token mag
+  alleen lezen, in de repositories die jij aanwijst; de radar haalt er alleen
+  het lockfile mee op. De app-registratie mag alleen versturen, en alleen vanuit
+  één postvak.
 - **Wat hij bewaart.** In de map `.radar` staat welke meldingen hij al zag. De
-  mail en het rapport van elke run blijven 14 dagen bij de run staan.
+  mail en het rapport van elke run blijven 14 dagen als bijlage bij de run
+  staan, en het rapport staat ook in de samenvatting van de run. Alleen wie bij
+  je afgeschermde repository kan, ziet dat.
 - **Geen pakketten van derden.** De radar gebruikt alleen wat in Node.js zit. De
   acties in de taak staan vast op een commit, niet op een versienaam.
 - **Tekst uit bronnen is tekst.** Alles wat uit een melding komt, wordt
@@ -240,6 +287,11 @@ Dat is normaal bij een app die een tijd niet is bijgewerkt. Begin bij Nu
 oppakken. Eén update lost vaak tientallen meldingen tegelijk op. De prompt in
 [prompts/06-nulmeting-opruimen.md](prompts/06-nulmeting-opruimen.md) maakt er
 een plan van.
+
+**Wat betekent "niet volledig gecontroleerd"?**
+Dat de radar een deel van een app niet kon nakijken, bijvoorbeeld omdat een
+lockfile niet te lezen was of een bron geen antwoord gaf. Die app staat dan
+nooit onder Geen actie nodig. Onder Let op staat wat er aan de hand is.
 
 **Hoe weet ik dat de radar nog werkt?**
 Doordat je elke ochtend een mail krijgt, ook als er niets is. Mislukt een run,

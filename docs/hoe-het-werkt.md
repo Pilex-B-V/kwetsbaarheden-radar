@@ -17,7 +17,8 @@ dezelfde uitkomst te geven.
    webserver vraagt hij NVD welke kwetsbaarheden bij jouw versie horen.
 4. **Verrijken.** Per kwetsbaarheid zoekt hij op of die actief wordt misbruikt
    (CISA KEV en EUVD), hoe groot de kans daarop is (EPSS) en of het NCSC er een
-   advies over heeft.
+   advies over heeft. Naar EPSS en EUVD stuurt hij daarvoor het nummer van de
+   kwetsbaarheid.
 5. **Beoordelen.** Per app en per onderdeel bepaalt hij de ernst, de versie die
    het oplost, hoeveel werk dat is en hoe snel het moet.
 6. **Vergelijken met gisteren.** Wat hij nog niet eerder zag, krijgt het label
@@ -37,7 +38,9 @@ dezelfde uitkomst te geven.
 | [nodejs.org](https://nodejs.org/en/blog/vulnerability) | Beveiligingsreleases van Node.js | Node.js-project |
 
 Geeft een bron geen antwoord, dan gaat de run door en staat onderaan de mail
-welke bron ontbrak. Alleen als OSV.dev uitvalt, is er niets te vergelijken. De
+welke bron ontbrak. Kon een deel van een app daardoor niet worden nagekeken, of
+was een lockfile niet te lezen, dan staat die app onder Niet volledig
+gecontroleerd en nooit onder Geen actie nodig. Alleen als OSV.dev uitvalt, is er niets te vergelijken. De
 mail zegt dan dat de controle niet is gelukt, en de taak in GitHub wordt rood.
 
 ## Ernst
@@ -106,8 +109,9 @@ dan wint het zwaarste gevolg. De vertaaltabel staat in
 
 ## Wat nieuw is
 
-De radar onthoudt in de map `.radar` welke combinaties van app, onderdeel, versie
-en melding hij al zag. In GitHub Actions blijft die map bewaard via de cache.
+Elke mail laat alles zien wat open staat. Bij elk lek staat of het nieuw is, of
+sinds wanneer het open staat. De radar onthoudt daarvoor in de map `.radar`
+welke combinaties van app, onderdeel, versie en melding hij al zag. In GitHub Actions blijft die map bewaard via de cache.
 Raakt de cache een keer leeg, dan telt de eerstvolgende mail alles als nieuw. Er
 gaat verder niets verloren.
 

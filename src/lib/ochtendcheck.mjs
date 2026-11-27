@@ -84,9 +84,10 @@ async function probeer(bronnen, naam, taak, terugval) {
   }
 }
 
-async function controleerPlatformen(kaart, bronnen, waarschuwingen, opties) {
+async function controleerPlatformen(kaart, bronnen, waarschuwingen, onvolledig, opties) {
   const uit = [];
   const gedaan = new Map();
+  const mislukt = new Set();
   let nvdGebruikt = false;
   let nodeGebruikt = false;
   const fouten = { nvd: null, node: null };
@@ -122,6 +123,7 @@ async function controleerPlatformen(kaart, bronnen, waarschuwingen, opties) {
             }
           } catch (fout) {
             fouten.node = fout.message;
+            mislukt.add(sleutel);
           }
         } else if (p.cpe ?? CPE_NAMEN[naam]) {
           if (nvdGebruikt && !opties.omgeving?.NVD_API_KEY) await wacht(opties.nvdPauze ?? 6500);
@@ -142,6 +144,7 @@ async function controleerPlatformen(kaart, bronnen, waarschuwingen, opties) {
             }));
           } catch (fout) {
             fouten.nvd = fout.message;
+            mislukt.add(sleutel);
           }
         } else {
           meldingen = null;
@@ -149,7 +152,11 @@ async function controleerPlatformen(kaart, bronnen, waarschuwingen, opties) {
         gedaan.set(sleutel, meldingen);
       }
       const meldingen = gedaan.get(sleutel);
-      if (meldingen === null) {
+      if (mislukt.has(sleutel)) {
+        onvolledig.add(app.naam);
+        waarschuwingen.push(`${app.naam}: ${p.naam} ${p.versie} is vandaag niet gecontroleerd, de bron gaf geen antwoord.`);
+      } else if (meldingen === null) {
+        onvolledig.add(app.naam);
         waarschuwingen.push(
           `${app.naam}: ${p.naam} ${p.versie} staat op de kaart, maar de radar kent de naam niet en controleert het niet. Zet er een "cpe" bij (zie de README).`,
         );
@@ -171,10 +178,15 @@ export async function ochtendcheck(kaart, staat, opties = {}) {
   const tijdzone = opties.tijdzone ?? "Europe/Amsterdam";
   const bronnen = [];
   const waarschuwingen = [];
+  // Apps waarvan een deel niet is nagekeken. Die horen nooit onder "geen actie nodig".
+  const onvolledig = new Set();
 
   const uniek = new Map();
   for (const app of kaart.apps) {
-    for (const w of app.waarschuwingen ?? []) waarschuwingen.push(`${app.naam}: ${w}`);
+    for (const w of app.waarschuwingen ?? []) {
+      waarschuwingen.push(`${app.naam}: ${w}`);
+      onvolledig.add(app.naam);
+    }
     for (const o of app.onderdelen) uniek.set(`${o.ecosysteem}|${o.naam}|${o.versie}`, o);
   }
 
@@ -197,14 +209,11 @@ export async function ochtendcheck(kaart, staat, opties = {}) {
     probeer(bronnen, "NCSC", () => haalNcsc({ fetchFn: opties.fetchFn, cache: staat.cache.ncsc }), []),
   ]);
 
-  const platform = await controleerPlatformen(kaart, bronnen, waarschuwingen, opties);
+  const platform = await controleerPlatformen(kaart, bronnen, waarschuwingen, onvolledig, opties);
   const nvd = bronnen.find((b) => b.naam === "NVD");
   if (platform.nvdFout && nvd?.gelukt) {
     nvd.gelukt = false;
     nvd.fout = platform.nvdFout;
-  }
-  if (platform.nvdFout) {
-    waarschuwingen.push("De platformonderdelen (zoals je database) zijn vandaag niet gecontroleerd: NVD gaf geen antwoord.");
   }
 
   const alleMeldingen = [...(osv?.meldingen.values() ?? [])];
@@ -278,9 +287,13 @@ export async function ochtendcheck(kaart, staat, opties = {}) {
       nieuwOverig: overig.filter((b) => b.nieuw).length,
       openOverig: overig.filter((b) => !b.nieuw).length,
       misbruikt: bevindingen.filter((b) => b.misbruikt).length,
+      onvolledig: mislukt ? 0 : onvolledig.size,
     },
     bevindingen,
-    rustig: mislukt ? [] : kaart.apps.filter((a) => !metBevinding.has(a.naam)).map((a) => a.naam),
+    rustig: mislukt
+      ? []
+      : kaart.apps.filter((a) => !metBevinding.has(a.naam) && !onvolledig.has(a.naam)).map((a) => a.naam),
+    onvolledig: mislukt ? [] : kaart.apps.filter((a) => onvolledig.has(a.naam)).map((a) => a.naam),
     apps: kaart.apps.map((a) => ({ naam: a.naam, aantal: a.onderdelen.length + a.platform.length })),
     ncscNieuws,
     waarschuwingen,
