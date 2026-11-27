@@ -93,9 +93,10 @@ Vraag waar de radar moet draaien:
 1. **Inloggen.** `gh auth status`. Is de gebruiker niet ingelogd, laat hem dan
    zelf `gh auth login` draaien.
 2. **Een eigen, afgeschermde repository.** Wijst `origin` naar
-   `Pilex-B-V/kwetsbaarheden-radar`, hernoem die dan, zodat verbeteringen later
-   op te halen zijn: `git remote rename origin radar`. Vraag onder welk account
-   of welke organisatie de kopie moet komen en hoe hij moet heten.
+   `Pilex-B-V/kwetsbaarheden-radar`, maak die koppeling dan los met
+   `git remote remove origin`. Laat geen tweede koppeling staan: met twee
+   koppelingen weigert `gh secret set` te werken. Vraag onder welk account of
+   welke organisatie de kopie moet komen en hoe hij moet heten.
 3. **De kaart vastleggen.** `git add techniekkaart.json` en
    `git commit -m "Techniekkaart"`. Controleer met `git status` dat `.env` en
    `uit` niet meegaan.
@@ -133,4 +134,5 @@ Sluit af met een kort overzicht:
 - dat de radar bekende lekken in onderdelen ziet, en geen fouten in de eigen
   code of instellingen.
 
-Verbeteringen van de radar haal je later op met `git pull radar main`.
+Een nieuwe versie van de radar haal je later op met
+`git pull --no-rebase --no-edit https://github.com/Pilex-B-V/kwetsbaarheden-radar.git main`, gevolgd door `git push`.

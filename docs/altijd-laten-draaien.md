@@ -30,11 +30,11 @@ gh auth login
 
 ### 1. Maak je eigen, afgeschermde repository
 
-De kopie op je computer wijst nog naar de openbare repository van Pilex. Geef
-die een andere naam, zodat je later verbeteringen kunt ophalen:
+De kopie op je computer wijst nog naar de openbare repository van Pilex. Maak
+die koppeling los:
 
 ```bash
-git remote rename origin radar
+git remote remove origin
 ```
 
 Leg je kaart vast en maak je eigen repository aan. Vervang de naam door je eigen
@@ -72,6 +72,9 @@ Controleer welke namen er staan:
 gh secret list
 ```
 
+Een regel die je in `.env` leeg hebt gelaten, komt als lege secret in de lijst.
+Dat is niet erg: de radar slaat lege waarden over.
+
 Liever in de browser? Ga in je repository naar **Settings**, **Secrets and
 variables**, **Actions** en klik per waarde op **New repository secret**.
 
@@ -97,7 +100,13 @@ staat bij elk lek of het nieuw is, of sinds wanneer het open staat.
   en stuur de wijziging met `git push`.
 - **Een instelling wijzigen:** pas `.env` aan en draai `gh secret set -f .env`
   opnieuw.
-- **Een nieuwe versie van de radar:** `git pull radar main` en daarna `git push`.
+- **Een nieuwe versie van de radar** haal je op uit de openbare repository en
+  stuur je door naar je eigen kopie:
+
+  ```bash
+  git pull --no-rebase --no-edit https://github.com/Pilex-B-V/kwetsbaarheden-radar.git main
+  git push
+  ```
 - **Mislukt een run,** dan is hij onder **Actions** rood. Klik hem open: de
   laatste regels zeggen wat er misging.
 
@@ -140,4 +149,5 @@ en gebruik het volledige pad van Node.js dat `which node` geeft:
 - Wat er gebeurde, staat in `radar.log` in de map van de radar.
 - Op een eigen computer merk je een mislukte run alleen aan de mail die
   wegblijft. Laat de mail daarom elke dag komen, ook als er niets is.
-- Een nieuwe versie van de radar haal je op met `git pull`.
+- Een nieuwe versie van de radar haal je op met `git pull`. Je kaart en je
+  `.env` blijven staan.

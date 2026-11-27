@@ -231,7 +231,7 @@ uitleg, ook voor een eigen server, staat in
 GitHub Actions:
 
 ```bash
-git remote rename origin radar
+git remote remove origin
 git add techniekkaart.json
 git commit -m "Techniekkaart"
 gh repo create jouw-bedrijf/kwetsbaarheden-radar --private --source=. --remote=origin --push
@@ -464,9 +464,16 @@ afgeschermde repository valt ruim binnen wat een gratis GitHub-account elke
 maand aan rekentijd krijgt.
 
 **Hoe neem ik verbeteringen van de radar over?**
-Heb je de radar binnengehaald met `git clone` en uitgerold zoals hierboven, dan
-is het `git pull radar main` en daarna `git push`. Wat er is veranderd, staat
-bij [Releases](https://github.com/Pilex-B-V/kwetsbaarheden-radar/releases).
+Haal de nieuwe versie op uit deze repository en stuur hem door naar je eigen
+kopie. Je kaart en je instellingen blijven staan.
+
+```bash
+git pull --no-rebase --no-edit https://github.com/Pilex-B-V/kwetsbaarheden-radar.git main
+git push
+```
+
+Wat er is veranderd, staat bij
+[Releases](https://github.com/Pilex-B-V/kwetsbaarheden-radar/releases).
 
 ## Ontwikkelen
 
